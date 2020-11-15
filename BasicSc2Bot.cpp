@@ -24,6 +24,9 @@ void BasicSc2Bot::OnStep()
 	TryBuildBarracks();
 	TryBuildEngineeringBay();
 	TryBuildTurrets();
+	TryBuildFactory();
+	TryBuildStarPort();
+	TryBuildFusionCore();
 	AttackEnemy();
 	//fixBuildings();
 	return; 
@@ -177,10 +180,39 @@ bool BasicSc2Bot::TryBuildStructureAtPoint(ABILITY_ID ability_type_for_structure
 			unit_to_build = unit;
 		}
 	}
-	
+
 	Actions()->UnitCommand(unit_to_build,
 		ability_type_for_structure,
 		point);
+
+	return true;
+}
+
+bool BasicSc2Bot::TryBuildStructureAtUnit(ABILITY_ID ability_type_for_structure, const Unit* target_unit, UNIT_TYPEID unit_type) {
+	const ObservationInterface* observation = Observation();
+	// If a unit already is building a supply structure of this type, do nothing.
+	// Also get an scv to build the structure.
+	const Unit* unit_to_build = nullptr;
+	Units units = observation->GetUnits(Unit::Alliance::Self);
+	Point2D startPoint = observation->GetStartLocation();
+	for (const auto& unit : units)
+	{
+		for (const auto& order : unit->orders)
+		{
+			if (order.ability_id == ability_type_for_structure)
+			{
+				return false;
+			}
+		}
+		if (unit->unit_type == unit_type)
+		{
+			unit_to_build = unit;
+		}
+	}
+
+	Actions()->UnitCommand(unit_to_build,
+		ability_type_for_structure,
+		target_unit);
 
 	return true;
 }
@@ -217,6 +249,38 @@ const Unit* BasicSc2Bot::FindNearestUnit(const Point2D& start, UNIT_TYPEID unit_
 	return target;
 }
 
+const Unit* BasicSc2Bot::FindNearestGeyser(const Point2D& start) {
+	const ObservationInterface* observation = Observation();
+	Units units = observation->GetUnits(Unit::Alliance::Neutral);
+	Filter refinery_filter = UnitIsRefinery;
+	Units refineries = observation->GetUnits(Unit::Alliance::Self, refinery_filter);
+	std::vector<Point2D> r_points;
+	const Unit* target = nullptr;
+	float distance = std::numeric_limits<float>::max();
+
+	for (const auto& u : refineries) {
+		r_points.push_back(u->pos);
+	}
+
+	for (const auto& u : units) {
+		if (u->unit_type == UNIT_TYPEID::NEUTRAL_VESPENEGEYSER) {
+			if (std::find(r_points.begin(), r_points.end(), u->pos) != r_points.end()) {
+				continue;
+			}
+			float d = DistanceSquared2D(u->pos, start);
+			if (d < distance) {
+				distance = d;
+				target = u;
+			}
+		}
+	}
+
+	return target;
+}
+
+bool BasicSc2Bot::UnitIsRefinery(const Unit& u) {
+	return u.unit_type == UNIT_TYPEID::TERRAN_REFINERY;
+}
 
 bool BasicSc2Bot::TryBuildBarracks() {
 	const ObservationInterface* observation = Observation();
@@ -291,6 +355,47 @@ bool BasicSc2Bot::fixBuildings(){
 	return false;
 }
 
+bool BasicSc2Bot::TryBuildFactory() {
+	const ObservationInterface* observation = Observation();
+
+	if (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) < 1)
+	{
+		return false;
+	}
+
+	return TryBuildStructure(ABILITY_ID::BUILD_FACTORY);
+}
+
+bool BasicSc2Bot::BuildBunkerAtPoint(const Point2D& p) {
+	const ObservationInterface* observation = Observation();
+	if (!observation->IsPlacable(p)) {
+		return false;
+	}
+
+	return TryBuildStructureAtPoint(ABILITY_ID::BUILD_BUNKER, p);
+}
+
+
+
+bool BasicSc2Bot::TryBuildStarPort() {
+	const ObservationInterface* observation = Observation();
+	if (CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) < 1)
+	{
+		return false;
+	}
+
+	return TryBuildStructure(ABILITY_ID::BUILD_STARPORT);
+}
+
+bool BasicSc2Bot::TryBuildFusionCore() {
+	const ObservationInterface* observation = Observation();
+	if (CountUnitType(UNIT_TYPEID::TERRAN_STARPORT) < 1)
+	{
+		return false;
+	}
+
+	return TryBuildStructure(ABILITY_ID::BUILD_FUSIONCORE);
+}
 
 bool BasicSc2Bot::TryBuildRefinery() {
 
@@ -301,12 +406,12 @@ bool BasicSc2Bot::TryBuildRefinery() {
 	}
 	
 	//Need to find position of vespene gas
-	const Unit* mineral_target = FindNearestUnit(startPoint, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER);
+	const Unit* mineral_target = FindNearestGeyser(startPoint);
 	if (!mineral_target) {
 		return false;
 	}
 	
-	TryBuildStructureAtPoint(ABILITY_ID::BUILD_REFINERY, mineral_target->pos);
+	TryBuildStructureAtUnit(ABILITY_ID::BUILD_REFINERY, mineral_target);
 
 	return true;
 }
