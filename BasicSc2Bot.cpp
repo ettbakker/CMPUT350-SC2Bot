@@ -22,7 +22,6 @@ void BasicSc2Bot::OnStep()
 	TryBuildRefinery();
 	TryBuildCommandCenter();
 	TryBuildBarracks();
-	TryAddOnTechLabBarracks();
 	TryBuildEngineeringBay();
 	TryBuildTurrets();
 	TryBuildFactory();
@@ -33,7 +32,7 @@ void BasicSc2Bot::OnStep()
 	return;
 }
 
-void BasicSc2Bot::OnUnitIdle(const Unit* unit) 
+void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 {
 	switch (unit->unit_type.ToType())
 	{
@@ -59,9 +58,20 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 
 	case UNIT_TYPEID::TERRAN_BARRACKS:
 	{
-		/*if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
-			Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
-		}*/
+		if (unit->add_on_tag == 0)
+		{
+			TryAddOnTechLabBarracks();
+		}
+
+		if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > 20)
+		{
+			if (CountUnitType(UNIT_TYPEID::TERRAN_REAPER) <= 15)
+			{
+				Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
+				break;
+			}
+		}
+
 		Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
 		break;
 	}
@@ -91,7 +101,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 	case UNIT_TYPEID::TERRAN_REAPER:
 	{
 
-		std::cout << "Reaper produced";
+		//std::cout << "Reaper produced";
 		break;
 	}
 
@@ -115,6 +125,11 @@ bool BasicSc2Bot::AttackEnemy() {
 			Actions()->UnitCommand(sending, ABILITY_ID::ATTACK_ATTACK, uData[0]);
 		}
 
+		filter = IsUnit(UNIT_TYPEID::TERRAN_REAPER);
+		sending = observation->GetUnits(Unit::Alliance::Self, filter);
+		if (sending.size() > 1) {
+			Actions()->UnitCommand(sending, ABILITY_ID::ATTACK_ATTACK, uData[0]);
+		}
 
 	}
 
@@ -423,24 +438,25 @@ bool BasicSc2Bot::TryAddOnTechLabBarracks() {
 	const ObservationInterface* observation = Observation();
 	Point2D startPoint = observation->GetStartLocation();
 
-	if (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) < 1) {
+	if (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) < 2) {
 		return false;
 	}
 
-	const Unit* barracks = FindNearestUnit(startPoint, UNIT_TYPEID::TERRAN_BARRACKS);
-	if (!barracks) {
-		return false;
-	}
-
-	if (barracks->build_progress != 1)
-	{
-		return false;
-	}
+	Filter terran_barracks = IsUnit(UNIT_TYPEID::TERRAN_BARRACKS);
+	Units barracks = observation->GetUnits(terran_barracks);
 
 	float rx = GetRandomScalar();
 	float ry = GetRandomScalar();
 
-	Actions()->UnitCommand(barracks, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
-	//Point2D((barracks->pos).x + rx * 15.0f, (barracks->pos).y + ry * 15.0f)
+	for (const auto& unit : barracks)
+	{
+		if (unit->build_progress != 1)
+		{
+			return false;
+		}
+
+		Actions()->UnitCommand(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS, 
+			Point2D(unit->pos.x + rx * 15.0f, unit->pos.y + ry * 15.0f));
+	}
 	return true;
 }
