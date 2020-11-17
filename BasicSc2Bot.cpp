@@ -15,6 +15,33 @@ void BasicSc2Bot::OnGameOver() {
 	std::cout << "Game Over" << std::endl;
 }
 
+// Use StrategyManager to create string of commands that the bot executes
+/*
+void BasicSc2Bot::OnStep()
+{
+	std::vector<Command> step_plan = planner.PlanStep();
+	for (Command cmd : step_plan) {
+		ExecuteCommand(cmd);
+	}
+}
+*/
+void BasicSc2Bot::ExecuteCommand(const Command& cmd) {
+	Units units = cmd.get_units();
+	AbilityID ability = cmd.get_ability();
+	const Unit* target;
+	Point2D point;
+
+	if (cmd.get_point(point)) {
+		Actions()->UnitCommand(units, ability, point);
+	} 
+	else if (cmd.get_target(&target)) {
+		Actions()->UnitCommand(units, ability, target);
+	}
+	else {
+		Actions()->UnitCommand(units, ability);
+	}
+}
+
 void BasicSc2Bot::OnStep() 
 { 
 	//std::cout << Observation()->GetGameLoop() << std::endl;
@@ -38,62 +65,27 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 	{
 		case UNIT_TYPEID::TERRAN_COMMANDCENTER:
 		{
-			Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
-			break;
+			OnIdleCommandCenter(unit); break;
 		}
 
 		case UNIT_TYPEID::TERRAN_SCV: 
 		{
-
-			const Unit* mineral_target = FindNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_REFINERY);
-			if(!mineral_target) {
-				mineral_target = FindNearestUnit(unit->pos, UNIT_TYPEID::NEUTRAL_MINERALFIELD);
-				if (!mineral_target) {
-					break;
-				}
-			}
-			Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
-			break;
+			OnIdleSCV(unit); break;
 		}
 
 		case UNIT_TYPEID::TERRAN_BARRACKS: 
 		{
-			/*if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
-				Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
-			}*/
-			Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
-			break;
+			OnIdleBarracks(unit);  break;
 		}
 
 		case UNIT_TYPEID::TERRAN_MARINE: 
 		{
-			const ObservationInterface* observation = Observation();
-			const GameInfo& game_info = observation->GetGameInfo();
-			Point2D newPoint = observation->GetStartLocation();
-			size_t numberMarines = CountUnitType(UNIT_TYPEID::TERRAN_MARINE);
-			float rx = GetRandomScalar();
-			float ry = GetRandomScalar();
-			//Send every 10th idle marine to a random enemy location so that we can spot enemy
-			if ((numberMarines % 20) == 0) {
-				randomMarineLocation = rand() % game_info.enemy_start_locations.size();
-				newPoint = game_info.enemy_start_locations[randomMarineLocation];
-			}//Send others close to base
-			else {
-				newPoint = Point2D(newPoint.x + rx * 15.0f, newPoint.y + ry * 15.0f);
-			}
-			//Only send marines out if we have a small army
-			if (numberMarines > 20) {
-				Actions()->UnitCommand(unit, ABILITY_ID::ATTACK_ATTACK, newPoint);
-			}
-			break;
+			OnIdleMarine(unit); break;
 		}
 		case UNIT_TYPEID::TERRAN_REAPER:
 		{
-			
-			std::cout << "Reaper produced";
-			break;
+			OnIdleReaper(unit); break;
 		}
-
 		default:
 		{
 			break;
@@ -102,6 +94,53 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 }
 
 //private
+
+void BasicSc2Bot::OnIdleCommandCenter(const Unit* unit) {
+	Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
+}
+
+void BasicSc2Bot::OnIdleSCV(const Unit* unit) {
+	const Unit* mineral_target = FindNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_REFINERY);
+	if (!mineral_target) {
+		mineral_target = FindNearestUnit(unit->pos, UNIT_TYPEID::NEUTRAL_MINERALFIELD);
+		if (!mineral_target) {
+			return;
+		}
+	}
+	Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
+
+}
+void BasicSc2Bot::OnIdleBarracks(const Unit* unit) {
+	/*if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
+		Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
+	}*/
+	Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
+}
+
+void BasicSc2Bot::OnIdleMarine(const Unit* unit) {
+	const ObservationInterface* observation = Observation();
+	const GameInfo& game_info = observation->GetGameInfo();
+	Point2D newPoint = observation->GetStartLocation();
+	size_t numberMarines = CountUnitType(UNIT_TYPEID::TERRAN_MARINE);
+	float rx = GetRandomScalar();
+	float ry = GetRandomScalar();
+	//Send every 10th idle marine to a random enemy location so that we can spot enemy
+	if ((numberMarines % 20) == 0) {
+		randomMarineLocation = rand() % game_info.enemy_start_locations.size();
+		newPoint = game_info.enemy_start_locations[randomMarineLocation];
+	}//Send others close to base
+	else {
+		newPoint = Point2D(newPoint.x + rx * 15.0f, newPoint.y + ry * 15.0f);
+	}
+	//Only send marines out if we have a small army
+	if (numberMarines > 20) {
+		Actions()->UnitCommand(unit, ABILITY_ID::ATTACK_ATTACK, newPoint);
+	}
+}
+
+void BasicSc2Bot::OnIdleReaper(const Unit* unit) {
+	
+}
 
 bool BasicSc2Bot::AttackEnemy() {
 	const ObservationInterface* observation = Observation();

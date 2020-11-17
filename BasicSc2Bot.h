@@ -1,6 +1,8 @@
 #ifndef BASIC_SC2_BOT_H_
 #define BASIC_SC2_BOT_H_
 
+#include "Command.h"
+#include "StrategyManager.h"
 #include "sc2api/sc2_api.h"
 #include "sc2api/sc2_args.h"
 #include "sc2lib/sc2_lib.h"
@@ -18,6 +20,7 @@ public:
 	virtual void OnStep();
 	virtual void OnUnitIdle(const Unit* unit);
 	virtual void OnGameOver();
+	void ExecuteCommand(const Command& cmd);
 
 private:
 	//Multiple-use Functions
@@ -40,6 +43,13 @@ private:
 	bool TryBuildStarPort();
 	bool TryBuildFusionCore();
 
+	//On-idle unit functions
+	void OnIdleCommandCenter(const Unit* unit);
+	void OnIdleSCV(const Unit* unit);
+	void OnIdleBarracks(const Unit* unit);
+	void OnIdleMarine(const Unit* unit);
+	void OnIdleReaper(const Unit* unit);
+
 	//Attacking
 	bool AttackEnemy();
 	bool fixBuildings();
@@ -48,6 +58,7 @@ private:
 	static bool UnitIsRefinery(const Unit& u);
 
 	//Variables
+	StrategyManager* stratMngr;
 	size_t randomMarineLocation = 0;
 	bool enemySpotted = false;
 };
