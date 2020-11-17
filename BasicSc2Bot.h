@@ -8,6 +8,7 @@
 #include "sc2utils/sc2_arg_parser.h"
 #include <sc2api\sc2_unit_filters.h>
 #include <iostream>
+#include <algorithm>
 
 using namespace sc2;
 
@@ -23,7 +24,9 @@ private:
 	size_t CountUnitType(UNIT_TYPEID unit_type);
 	bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::TERRAN_SCV);
 	bool TryBuildStructureAtPoint(ABILITY_ID ability_type_for_structure, Point2D point, UNIT_TYPEID unit_type = UNIT_TYPEID::TERRAN_SCV);
+	bool TryBuildStructureAtUnit(ABILITY_ID ability_type_for_structure, const Unit* target_unit, UNIT_TYPEID unit_type = UNIT_TYPEID::TERRAN_SCV);
 	const Unit* FindNearestUnit(const Point2D& start, UNIT_TYPEID unit_type);
+	const Unit* FindNearestGeyser(const Point2D& start);
 
 	//Build Buildings
 	bool TryBuildSupplyDepot();
@@ -32,10 +35,22 @@ private:
 	bool TryBuildBarracks();
 	bool TryBuildEngineeringBay();
 	bool TryBuildTurrets();
+	bool TryBuildFactory();
+	bool BuildBunkerAtPoint(const Point2D& p);
+	bool TryBuildStarPort();
+	bool TryBuildFusionCore();
+
+	//Build Add-ons
+	bool TryAddOnTechLabBarracks();
+
+	//build Units
 
 	//Attacking
 	bool AttackEnemy();
 	bool fixBuildings();
+
+	//Utility
+	static bool UnitIsRefinery(const Unit& u);
 
 	//Variables
 	size_t randomMarineLocation = 0;

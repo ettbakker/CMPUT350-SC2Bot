@@ -1,100 +1,104 @@
 #include "BasicSc2Bot.h"
 
-void BasicSc2Bot::OnGameStart() 
-{ 
+void BasicSc2Bot::OnGameStart()
+{
 	std::cout << "hello, World!" << std::endl;
-	return; 
+	return;
 }
 
 //Print the results of the players once the game is over.
 void BasicSc2Bot::OnGameOver() {
 	std::vector<PlayerResult> res = Observation()->GetResults();
-	for(auto r : res){
+	for (auto r : res) {
 		std::cout << r.player_id << r.result << std::endl;
 	}
 	std::cout << "Game Over" << std::endl;
 }
 
-void BasicSc2Bot::OnStep() 
-{ 
+void BasicSc2Bot::OnStep()
+{
 	//std::cout << Observation()->GetGameLoop() << std::endl;
 	TryBuildSupplyDepot();
 	TryBuildRefinery();
 	TryBuildCommandCenter();
 	TryBuildBarracks();
+	TryAddOnTechLabBarracks();
 	TryBuildEngineeringBay();
 	TryBuildTurrets();
+	TryBuildFactory();
+	TryBuildStarPort();
+	TryBuildFusionCore();
 	AttackEnemy();
 	//fixBuildings();
-	return; 
+	return;
 }
 
-void BasicSc2Bot::OnUnitIdle(const Unit* unit)
+void BasicSc2Bot::OnUnitIdle(const Unit* unit) 
 {
 	switch (unit->unit_type.ToType())
 	{
-		case UNIT_TYPEID::TERRAN_COMMANDCENTER:
-		{
-			Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
-			break;
-		}
+	case UNIT_TYPEID::TERRAN_COMMANDCENTER:
+	{
+		Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
+		break;
+	}
 
-		case UNIT_TYPEID::TERRAN_SCV: 
-		{
+	case UNIT_TYPEID::TERRAN_SCV:
+	{
 
-			const Unit* mineral_target = FindNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_REFINERY);
-			if(!mineral_target) {
-				mineral_target = FindNearestUnit(unit->pos, UNIT_TYPEID::NEUTRAL_MINERALFIELD);
-				if (!mineral_target) {
-					break;
-				}
+		const Unit* mineral_target = FindNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_REFINERY);
+		if (!mineral_target) {
+			mineral_target = FindNearestUnit(unit->pos, UNIT_TYPEID::NEUTRAL_MINERALFIELD);
+			if (!mineral_target) {
+				break;
 			}
-			Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
-			break;
 		}
+		Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
+		break;
+	}
 
-		case UNIT_TYPEID::TERRAN_BARRACKS: 
-		{
-			/*if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
-				Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
-			}*/
-			Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
-			break;
-		}
+	case UNIT_TYPEID::TERRAN_BARRACKS:
+	{
+		/*if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
+			Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
+		}*/
+		Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
+		break;
+	}
 
-		case UNIT_TYPEID::TERRAN_MARINE: 
-		{
-			const ObservationInterface* observation = Observation();
-			const GameInfo& game_info = observation->GetGameInfo();
-			Point2D newPoint = observation->GetStartLocation();
-			size_t numberMarines = CountUnitType(UNIT_TYPEID::TERRAN_MARINE);
-			float rx = GetRandomScalar();
-			float ry = GetRandomScalar();
-			//Send every 10th idle marine to a random enemy location so that we can spot enemy
-			if ((numberMarines % 20) == 0) {
-				randomMarineLocation = rand() % game_info.enemy_start_locations.size();
-				newPoint = game_info.enemy_start_locations[randomMarineLocation];
-			}//Send others close to base
-			else {
-				newPoint = Point2D(newPoint.x + rx * 15.0f, newPoint.y + ry * 15.0f);
-			}
-			//Only send marines out if we have a small army
-			if (numberMarines > 20) {
-				Actions()->UnitCommand(unit, ABILITY_ID::ATTACK_ATTACK, newPoint);
-			}
-			break;
+	case UNIT_TYPEID::TERRAN_MARINE:
+	{
+		const ObservationInterface* observation = Observation();
+		const GameInfo& game_info = observation->GetGameInfo();
+		Point2D newPoint = observation->GetStartLocation();
+		size_t numberMarines = CountUnitType(UNIT_TYPEID::TERRAN_MARINE);
+		float rx = GetRandomScalar();
+		float ry = GetRandomScalar();
+		//Send every 10th idle marine to a random enemy location so that we can spot enemy
+		if ((numberMarines % 20) == 0) {
+			randomMarineLocation = rand() % game_info.enemy_start_locations.size();
+			newPoint = game_info.enemy_start_locations[randomMarineLocation];
+		}//Send others close to base
+		else {
+			newPoint = Point2D(newPoint.x + rx * 15.0f, newPoint.y + ry * 15.0f);
 		}
-		case UNIT_TYPEID::TERRAN_REAPER:
-		{
-			
-			std::cout << "Reaper produced";
-			break;
+		//Only send marines out if we have a small army
+		if (numberMarines > 20) {
+			Actions()->UnitCommand(unit, ABILITY_ID::ATTACK_ATTACK, newPoint);
 		}
+		break;
+	}
+	case UNIT_TYPEID::TERRAN_REAPER:
+	{
 
-		default:
-		{
-			break;
-		}
+		std::cout << "Reaper produced";
+		break;
+	}
+
+	default:
+	{
+		break;
+	}
 	}
 }
 
@@ -110,7 +114,7 @@ bool BasicSc2Bot::AttackEnemy() {
 		if (sending.size() > 15) {
 			Actions()->UnitCommand(sending, ABILITY_ID::ATTACK_ATTACK, uData[0]);
 		}
-		
+
 
 	}
 
@@ -155,6 +159,7 @@ bool BasicSc2Bot::TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_
 
 	return true;
 }
+
 bool BasicSc2Bot::TryBuildStructureAtPoint(ABILITY_ID ability_type_for_structure, Point2D point, UNIT_TYPEID unit_type)
 {
 	const ObservationInterface* observation = Observation();
@@ -177,10 +182,39 @@ bool BasicSc2Bot::TryBuildStructureAtPoint(ABILITY_ID ability_type_for_structure
 			unit_to_build = unit;
 		}
 	}
-	
+
 	Actions()->UnitCommand(unit_to_build,
 		ability_type_for_structure,
 		point);
+
+	return true;
+}
+
+bool BasicSc2Bot::TryBuildStructureAtUnit(ABILITY_ID ability_type_for_structure, const Unit* target_unit, UNIT_TYPEID unit_type) {
+	const ObservationInterface* observation = Observation();
+	// If a unit already is building a supply structure of this type, do nothing.
+	// Also get an scv to build the structure.
+	const Unit* unit_to_build = nullptr;
+	Units units = observation->GetUnits(Unit::Alliance::Self);
+	Point2D startPoint = observation->GetStartLocation();
+	for (const auto& unit : units)
+	{
+		for (const auto& order : unit->orders)
+		{
+			if (order.ability_id == ability_type_for_structure)
+			{
+				return false;
+			}
+		}
+		if (unit->unit_type == unit_type)
+		{
+			unit_to_build = unit;
+		}
+	}
+
+	Actions()->UnitCommand(unit_to_build,
+		ability_type_for_structure,
+		target_unit);
 
 	return true;
 }
@@ -217,6 +251,38 @@ const Unit* BasicSc2Bot::FindNearestUnit(const Point2D& start, UNIT_TYPEID unit_
 	return target;
 }
 
+const Unit* BasicSc2Bot::FindNearestGeyser(const Point2D& start) {
+	const ObservationInterface* observation = Observation();
+	Units units = observation->GetUnits(Unit::Alliance::Neutral);
+	Filter refinery_filter = UnitIsRefinery;
+	Units refineries = observation->GetUnits(Unit::Alliance::Self, refinery_filter);
+	std::vector<Point2D> r_points;
+	const Unit* target = nullptr;
+	float distance = std::numeric_limits<float>::max();
+
+	for (const auto& u : refineries) {
+		r_points.push_back(u->pos);
+	}
+
+	for (const auto& u : units) {
+		if (u->unit_type == UNIT_TYPEID::NEUTRAL_VESPENEGEYSER) {
+			if (std::find(r_points.begin(), r_points.end(), u->pos) != r_points.end()) {
+				continue;
+			}
+			float d = DistanceSquared2D(u->pos, start);
+			if (d < distance) {
+				distance = d;
+				target = u;
+			}
+		}
+	}
+
+	return target;
+}
+
+bool BasicSc2Bot::UnitIsRefinery(const Unit& u) {
+	return u.unit_type == UNIT_TYPEID::TERRAN_REFINERY;
+}
 
 bool BasicSc2Bot::TryBuildBarracks() {
 	const ObservationInterface* observation = Observation();
@@ -283,14 +349,55 @@ bool BasicSc2Bot::TryBuildTurrets() {
 	return TryBuildStructureAtPoint(ABILITY_ID::BUILD_MISSILETURRET, Point2D(startPoint.x + rx * 45.0f, startPoint.y + ry * 45.0f));
 }
 
-bool BasicSc2Bot::fixBuildings(){
-		
+bool BasicSc2Bot::fixBuildings() {
+
 	const ObservationInterface* observation = Observation();
 	observation->GetRawObservation();
 
 	return false;
 }
 
+bool BasicSc2Bot::TryBuildFactory() {
+	const ObservationInterface* observation = Observation();
+
+	if (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) < 1)
+	{
+		return false;
+	}
+
+	return TryBuildStructure(ABILITY_ID::BUILD_FACTORY);
+}
+
+bool BasicSc2Bot::BuildBunkerAtPoint(const Point2D& p) {
+	const ObservationInterface* observation = Observation();
+	if (!observation->IsPlacable(p)) {
+		return false;
+	}
+
+	return TryBuildStructureAtPoint(ABILITY_ID::BUILD_BUNKER, p);
+}
+
+
+
+bool BasicSc2Bot::TryBuildStarPort() {
+	const ObservationInterface* observation = Observation();
+	if (CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) < 1)
+	{
+		return false;
+	}
+
+	return TryBuildStructure(ABILITY_ID::BUILD_STARPORT);
+}
+
+bool BasicSc2Bot::TryBuildFusionCore() {
+	const ObservationInterface* observation = Observation();
+	if (CountUnitType(UNIT_TYPEID::TERRAN_STARPORT) < 1)
+	{
+		return false;
+	}
+
+	return TryBuildStructure(ABILITY_ID::BUILD_FUSIONCORE);
+}
 
 bool BasicSc2Bot::TryBuildRefinery() {
 
@@ -299,14 +406,38 @@ bool BasicSc2Bot::TryBuildRefinery() {
 	if (CountUnitType(UNIT_TYPEID::TERRAN_REFINERY) > 3) {
 		return false;
 	}
-	
+
 	//Need to find position of vespene gas
-	const Unit* mineral_target = FindNearestUnit(startPoint, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER);
+	const Unit* mineral_target = FindNearestGeyser(startPoint);
 	if (!mineral_target) {
 		return false;
 	}
-	
-	TryBuildStructureAtPoint(ABILITY_ID::BUILD_REFINERY, mineral_target->pos);
+
+	TryBuildStructureAtUnit(ABILITY_ID::BUILD_REFINERY, mineral_target);
+
+	return true;
+}
+
+bool BasicSc2Bot::TryAddOnTechLabBarracks() {
+
+	const ObservationInterface* observation = Observation();
+	Point2D startPoint = observation->GetStartLocation();
+
+	if (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) < 1) {
+		return false;
+	}
+
+	const Unit* barracks = FindNearestUnit(startPoint, UNIT_TYPEID::TERRAN_BARRACKS);
+	if (!barracks) {
+		return false;
+	}
+
+	if (barracks->build_progress != 1)
+	{
+		return false;
+	}
+
+	Actions()->UnitCommand(barracks, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
 
 	return true;
 }
