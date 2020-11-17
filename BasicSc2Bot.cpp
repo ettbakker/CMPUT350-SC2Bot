@@ -437,7 +437,10 @@ bool BasicSc2Bot::TryAddOnTechLabBarracks() {
 		return false;
 	}
 
-	Actions()->UnitCommand(barracks, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
+	float rx = GetRandomScalar();
+	float ry = GetRandomScalar();
 
+	Actions()->UnitCommand(barracks, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
+	//Point2D((barracks->pos).x + rx * 15.0f, (barracks->pos).y + ry * 15.0f)
 	return true;
 }
