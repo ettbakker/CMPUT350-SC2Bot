@@ -1,9 +1,9 @@
 #include "StrategyManager.h"
 
-StrategyManager::StrategyManager(BasicSc2Bot* bot) : Manager(bot)
+StrategyManager::StrategyManager()
 {
-	prodMngr = new ProductionManager(bot);
-	combatMngr = new CombatManager(bot);
+	prodMngr = new ProductionManager();
+	combatMngr = new CombatManager();
 }
 
 StrategyManager::~StrategyManager()
@@ -12,7 +12,16 @@ StrategyManager::~StrategyManager()
 	delete combatMngr;
 }
 
-void StrategyManager::planStep(std::vector<Command>& step_commands) 
+void StrategyManager::planStep(CommandSequence& step_commands) 
 {
 
+}
+
+bool StrategyManager::getNextCommand(Command& next_cmd) {
+	if (!plan.isEmpty()) {
+		next_cmd = plan.front();
+		plan.popFront();
+	}
+
+	return false;
 }

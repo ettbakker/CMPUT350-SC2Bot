@@ -1,9 +1,7 @@
 #pragma once
-#include "Manager.h"
 
-
-class CombatManager : public Manager {
+class CombatManager {
 public:
-	CombatManager(BasicSc2Bot* bot);
+	CombatManager();
 private:
 };

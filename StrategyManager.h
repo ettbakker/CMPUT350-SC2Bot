@@ -1,17 +1,18 @@
 #pragma once
 #include "Command.h"
-#include "Manager.h"
 #include "CombatManager.h"
 #include "ProductionManager.h"
-#include "BasicSc2Bot.h"
 #include <vector>
 
-class StrategyManager : public Manager {
+
+class StrategyManager {
 public:
-	StrategyManager(BasicSc2Bot* bot);
+	StrategyManager();
 	~StrategyManager();
-	void planStep(std::vector<Command>& step_commands);
+	bool getNextCommand(Command& next_cmd);
+	void planStep(CommandSequence& step_commands);
 private:
 	ProductionManager* prodMngr;
 	CombatManager* combatMngr;
+	CommandSequence plan;
 };

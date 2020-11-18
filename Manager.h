@@ -1,16 +1,18 @@
 #pragma once
 #include "Command.h"
-#include "BasicSc2Bot.h"
 
+namespace sc2 {
+	class Manager {
+		class BasicSc2Bot;
+	public:
+		Manager(BasicSc2Bot* bot) : bot(bot) { }
+		virtual ~Manager() { }
+		void ExecuteCommand(const Command& cmd) {
+			
+		}
 
-class Manager {
-public:
-	Manager(BasicSc2Bot* bot) : bot(bot) { }
-	virtual ~Manager() { }
-	void ExecuteCommand(const Command& cmd) {
-		bot->ExecuteCommand(cmd);
-	}
+	private:
+		BasicSc2Bot* bot;
+	};
 
-private:
-	BasicSc2Bot* bot;
-};
+}
