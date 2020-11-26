@@ -20,37 +20,83 @@ void BasicSc2Bot::OnGameOver() {
 
 void BasicSc2Bot::OnStep()
 {
-	prodMngr->TryBuildSupplyDepot();
-	prodMngr->TryBuildRefinery();
-	prodMngr->TryBuildCommandCenter();
-	prodMngr->TryBuildBarracks();
-	prodMngr->TryBuildEngineeringBay();
-	prodMngr->TryBuildTurrets();
-	prodMngr->TryBuildFactory();
-	prodMngr->TryBuildStarPort();
-	prodMngr->TryBuildFusionCore();
+	//prodMngr->SetObservationAndActions(Observation(), Actions());
+	//combatMngr->SetObservationAndActions(Observation(), Actions());
+
+	//prodMngr->TryBuildSupplyDepot();
+	//prodMngr->TryBuildRefinery();
+	//prodMngr->TryBuildCommandCenter();
+	//prodMngr->TryBuildBarracks();
+	//prodMngr->TryBuildEngineeringBay();
+	//prodMngr->TryBuildTurrets();
+	//prodMngr->TryBuildFactory();
+	//prodMngr->TryBuildStarPort();
+	//prodMngr->TryBuildFusionCore();
 }
 
 void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 {
+	switch (unit->unit_type.ToType()) {
+		case UNIT_TYPEID::TERRAN_COMMANDCENTER:
+		{
+			prodMngr->OnIdleCommandCenter(unit); 
+			break;
+		}
 
+		case UNIT_TYPEID::TERRAN_SCV:
+		{
+			//prodMngr->OnIdleSCV(unit); 
+			break;
+		}
+
+		case UNIT_TYPEID::TERRAN_BARRACKS:
+		{
+			prodMngr->OnIdleBarracks(unit);  break;
+		}
+
+		case UNIT_TYPEID::TERRAN_MARINE:
+		{
+			combatMngr->OnIdleMarine(unit); break;
+		}
+		case UNIT_TYPEID::TERRAN_REAPER:
+		{
+			combatMngr->OnIdleReaper(unit); break;
+		}
+		default:
+		{
+			break;
+		}
+	}
 }
 
 /**
+void BasicSc2Bot::RunManagerCommands(Manager* mngr) {
+	Command cmd;
+	
+	while (!(mngr->commands.IsEmpty())) {
+		cmd = mngr->commands.Front();
+		ExecuteCommand(cmd);
+		mngr->commands.PopFront();
+	}
+}
+
 void BasicSc2Bot::ExecuteCommand(const Command& cmd) {
-	Units units = cmd.GetUnits();
+	const Unit* unit = cmd.GetUnit();
 	AbilityID ability = cmd.GetAbility();
 	const Unit* target;
 	Point2D point;
-
+	
 	if (cmd.GetPoint(point)) {
-		Actions()->UnitCommand(units, ability, point);
+		std::cout << "Doing cmd with point\n";
+		Actions()->UnitCommand(unit, ability, point);
 	} 
 	else if (cmd.GetTarget(&target)) {
-		Actions()->UnitCommand(units, ability, target);
+		std::cout << "Cmd with target unit\n";
+		Actions()->UnitCommand(unit, ability, target);
 	}
 	else {
-		Actions()->UnitCommand(units, ability);
+		std::cout << "Cmd with only ability\n";
+		Actions()->UnitCommand(unit, ability);
 	}
 }
 */

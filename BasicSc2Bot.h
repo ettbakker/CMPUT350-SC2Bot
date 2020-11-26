@@ -7,6 +7,7 @@
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
 #include <sc2api\sc2_unit_filters.h>
+#include "Manager.h"
 #include "ProductionManager.h"
 #include "CombatManager.h"
 #include <iostream>
@@ -22,6 +23,8 @@ public:
 	virtual void OnGameOver();
 
 private:
+	//void ExecuteCommand(const Command& cmd);
+	//void RunManagerCommands(Manager* mngr);
 
 	// Variables
 	ProductionManager* prodMngr;

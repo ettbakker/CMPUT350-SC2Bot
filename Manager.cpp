@@ -2,12 +2,12 @@
 
 size_t Manager::CountUnitType(UNIT_TYPEID unit_type)
 {
-	return Observation()->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
+	return observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
 
 const Unit* Manager::GetNearestUnit(const Point2D& point, UNIT_TYPEID unit_type)
 {
-	Units units = Observation()->GetUnits(Unit::Alliance::Neutral);
+	Units units = observation->GetUnits(Unit::Alliance::Neutral);
 	float distance = std::numeric_limits<float>::max();
 	const Unit* target = nullptr;
 	for (const auto& u : units)
@@ -27,10 +27,10 @@ const Unit* Manager::GetNearestUnit(const Point2D& point, UNIT_TYPEID unit_type)
 
 Point2D Manager::GetStartPoint()
 {
-	return Observation()->GetStartLocation();
+	return observation->GetStartLocation();
 }
 
-void Manager::SendActions()
-{
-	Actions()->SendActions();
+void Manager::SetObservationAndActions(const ObservationInterface* obs, ActionInterface* act) {
+	observation = obs;
+	actions = act;
 }

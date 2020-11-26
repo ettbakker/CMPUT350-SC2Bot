@@ -17,8 +17,7 @@ bool ProductionManager::TryBuildStructureNearPoint(ABILITY_ID build_ability, Poi
 	if (builder_unit == nullptr) {
 		return false;
 	}
-
-	Actions()->UnitCommand(builder_unit, build_ability, near_point);
+	actions->UnitCommand(builder_unit, build_ability, near_point);
 	return true;
 }
 
@@ -35,15 +34,15 @@ bool ProductionManager::TryBuildStructureAtUnit(ABILITY_ID build_ability, const 
 		return false;
 	}
 
-	Actions()->UnitCommand(builder_unit, build_ability, target_unit);
+	//Actions()->UnitCommand(builder_unit, build_ability, target_unit);
 	return true;
 }
 
 // Methods for verifying whether a certain structure can be built
 bool ProductionManager::CanBuildSupplyDepot() {
-	const ObservationInterface* observation = Observation();
 	// If we are not supply capped, don't build a supply depot.
 	if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2) {
+		std::cout << "Can't build supply\n";
 		return false;
 	}
 	return true;
@@ -115,7 +114,6 @@ bool ProductionManager::CanBuildFusionCore() {
 }
 
 bool ProductionManager::CanBuildTurret() {
-	const ObservationInterface* observation = Observation();
 	//Need an engineering bay to build turrets
 	if (CountUnitType(UNIT_TYPEID::TERRAN_ENGINEERINGBAY) < 1)
 	{
@@ -130,7 +128,7 @@ bool ProductionManager::CanBuildTurret() {
 // Build Refinery Methods
 bool ProductionManager::TryBuildRefinery(const Unit* target_geyser) {
 	if (target_geyser == nullptr) {
-		Point2D startPoint = Observation()->GetStartLocation();
+		Point2D startPoint = GetStartPoint();
 		if (CountUnitType(UNIT_TYPEID::TERRAN_REFINERY) > 3) {
 			return false;
 		}
@@ -335,6 +333,31 @@ bool ProductionManager::TryBuildFusionCore(const BoundingBox& box) {
 	return TryBuildStructureInBox(ABILITY_ID::BUILD_FUSIONCORE, box);
 }
 
+// On-idle methods
+
+void ProductionManager::OnIdleSCV(const Unit* unit) {
+	const Unit* mineral_target = GetNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_REFINERY);
+	if (!mineral_target) {
+		mineral_target = GetNearestUnit(unit->pos, UNIT_TYPEID::NEUTRAL_MINERALFIELD);
+		if (!mineral_target) {
+			return;
+		}
+	}
+	
+	actions->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
+}
+
+void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
+	actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
+}
+
+void ProductionManager::OnIdleBarracks(const Unit* unit) {
+	/*if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
+	Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
+	}*/
+	actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
+}
+
 // Build utility methods
 Point2D ProductionManager::GetNearbyPoint(const Point2D& start_point, float build_radius)
 {
@@ -343,7 +366,6 @@ Point2D ProductionManager::GetNearbyPoint(const Point2D& start_point, float buil
 }
 
 const Unit* ProductionManager::GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYPEID builder_type) {
-	const ObservationInterface* observation = Observation();
 	const Unit* unit_to_build = nullptr;
 	Units units = observation->GetUnits(Unit::Alliance::Self);
 	Point2D startPoint = observation->GetStartLocation();

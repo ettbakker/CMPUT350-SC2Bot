@@ -4,23 +4,34 @@
 
 Command::Command() : has_target(false), has_point(false), target(nullptr) { }
 
-Command::Command(const Unit* unit, AbilityID ability) {
-	Units units = { unit };
-	Command(units, ability);
+Command::Command(const Unit* unit, AbilityID ability) 
+	: has_target(false), has_point(false), has_one_unit(true) {
+	this->unit = unit;
+	this->ability = ability;
 }
 
-Command::Command(const Unit* unit, AbilityID ability, Point2D point) {
-	Units units = { unit };
-	Command(units, ability, point);
+Command::Command(const Unit* unit, AbilityID ability, Point2D point) 
+	: has_target(false), has_point(true), has_one_unit(true) {
+	this->unit = unit;
+	this->ability = ability;
+	this->point = point;
 }
 
-Command::Command(const Unit* unit, AbilityID ability, const Unit* target) {
-	Units units = { unit };
-	Command(units, ability, target);
+Command::Command(const Unit* unit, AbilityID ability, const Unit* target) 
+	: has_target(true), has_point(false), has_one_unit(true) {
+	this->unit = unit;
+	this->ability = ability;
+	this->target = target;
 }
 
-Command::Command(const Units& units, AbilityID ability)
-	: has_target(false), has_point(false)
+const Unit* Command::GetUnit() const
+{
+	return unit;
+}
+
+/**
+Command::Command(std::vector<const Unit*> units, AbilityID ability)
+	: has_target(false), has_point(false), has_one_unit(false)
 {
 	assert(units.size() > 0);
 	this->units = units;
@@ -41,8 +52,8 @@ Command::Command(const Units& units, AbilityID ability, const Unit* target)
 	this->target = target;
 	has_target = true;
 }
-
-Units Command::GetUnits() const { return units; }
+*/
+//Units Command::GetUnits() const { return units; }
 
 AbilityID Command::GetAbility() const { return ability; }
 
@@ -58,6 +69,7 @@ bool Command::GetTarget(const Unit** target) const {
 // CommandSequence class methods
 
 void CommandSequence::PushBack(const Command& cmd) {
+	std::cout << "Added cmd\n";
 	commands.push_back(cmd);
 }
 

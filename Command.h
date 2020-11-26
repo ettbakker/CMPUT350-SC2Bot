@@ -2,6 +2,7 @@
 #include <vector>
 #include <cassert>
 #include "sc2api/sc2_api.h"
+#include <iostream>
 
 using namespace sc2;
 
@@ -13,19 +14,23 @@ public:
 	Command(const Unit* unit, AbilityID ability, Point2D point);
 	Command(const Unit* unit, AbilityID ability, const Unit* target);
 
+	/**
 	Command(const Units& units, AbilityID ability);
 	Command(const Units& units, AbilityID ability, Point2D point);
 	Command(const Units& units, AbilityID ability, const Unit* target);
+	*/
 
-	Units GetUnits() const;
+	const Unit* GetUnit() const;
+	//Units GetUnits() const;
 	AbilityID GetAbility() const;
 	bool GetPoint(Point2D& point) const;
 	bool GetTarget(const Unit** target) const;
 
 private:
-	Units units;
+	//const Units units;
+	const Unit* unit;
 	AbilityID ability;
-	bool has_target, has_point;
+	bool has_one_unit, has_target, has_point;
 
 	const Unit* target;
 	Point2D point;

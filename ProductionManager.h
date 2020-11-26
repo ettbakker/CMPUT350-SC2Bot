@@ -71,6 +71,11 @@ public:
 	bool TryBuildFusionCore(Point2D point, float build_radius=0.0);
 	bool TryBuildFusionCore(const BoundingBox& box);
 
+	// On-idle methods for buildings and SCV
+	void OnIdleSCV(const Unit* unit);
+	void OnIdleCommandCenter(const Unit* unit);
+	void OnIdleBarracks(const Unit* unit);
+
 	Point2D GetNearbyPoint(const Point2D& start_point, float build_radius = 0.0);
 
 	const Unit* GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYPEID builder_type = UNIT_TYPEID::TERRAN_SCV);

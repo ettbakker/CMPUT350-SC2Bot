@@ -11,7 +11,8 @@ public:
 	size_t CountUnitType(UNIT_TYPEID unit_type);
 	const Unit* GetNearestUnit(const Point2D& point, UNIT_TYPEID unit_type);
 	Point2D GetStartPoint();
-	void SendActions();
-private:
-	CommandSequence commands;
+	void SetObservationAndActions(const ObservationInterface* obs, ActionInterface* act);
+	
+	const ObservationInterface* observation;
+	ActionInterface* actions;
 };
