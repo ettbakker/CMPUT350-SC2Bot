@@ -34,7 +34,7 @@ bool ProductionManager::TryBuildStructureAtUnit(ABILITY_ID build_ability, const 
 		return false;
 	}
 
-	//Actions()->UnitCommand(builder_unit, build_ability, target_unit);
+	actions->UnitCommand(builder_unit, build_ability, target_unit);
 	return true;
 }
 
@@ -42,7 +42,6 @@ bool ProductionManager::TryBuildStructureAtUnit(ABILITY_ID build_ability, const 
 bool ProductionManager::CanBuildSupplyDepot() {
 	// If we are not supply capped, don't build a supply depot.
 	if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2) {
-		std::cout << "Can't build supply\n";
 		return false;
 	}
 	return true;
@@ -126,20 +125,36 @@ bool ProductionManager::CanBuildTurret() {
 }
 
 // Build Refinery Methods
-bool ProductionManager::TryBuildRefinery(const Unit* target_geyser) {
+bool ProductionManager::TryBuildRefinery(Point2D point, const Unit* target_geyser) {
 	if (target_geyser == nullptr) {
-		Point2D startPoint = GetStartPoint();
-		if (CountUnitType(UNIT_TYPEID::TERRAN_REFINERY) > 3) {
-			return false;
+		Units units = observation->GetUnits(Unit::Alliance::Neutral);
+		Units refineries = observation->GetUnits(Unit::Alliance::Self, IsVisibleGeyser());
+		std::vector<Point2D> r_points;
+		float distance = std::numeric_limits<float>::max();
+
+		for (const auto& u : refineries) {
+			r_points.push_back(u->pos);
 		}
 
-		//Need to find position of vespene gas
-		const Unit* target_geyser = GetNearestUnit(startPoint, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER);
-		if (!target_geyser) {
-			return false;
+		for (const auto& u : units) {
+			if (u->unit_type == UNIT_TYPEID::NEUTRAL_VESPENEGEYSER) {
+				if (std::find(r_points.begin(), r_points.end(), u->pos) != r_points.end()) {
+					continue;
+				}
+				float d = DistanceSquared2D(u->pos, point);
+				if (d < distance) {
+					distance = d;
+					target_geyser = u;
+				}
+			}
 		}
 	}
 	return TryBuildStructureAtUnit(ABILITY_ID::BUILD_REFINERY, target_geyser);
+}
+
+bool ProductionManager::TryBuildRefinery(const Unit* target_geyser)
+{
+	return TryBuildRefinery(GetStartPoint(), target_geyser);
 }
 
 // Build Supply Depot Methods

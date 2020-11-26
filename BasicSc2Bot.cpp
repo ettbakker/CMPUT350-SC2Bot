@@ -20,22 +20,24 @@ void BasicSc2Bot::OnGameOver() {
 
 void BasicSc2Bot::OnStep()
 {
-	//prodMngr->SetObservationAndActions(Observation(), Actions());
-	//combatMngr->SetObservationAndActions(Observation(), Actions());
+	prodMngr->SetObservationAndActions(Observation(), Actions());
+	combatMngr->SetObservationAndActions(Observation(), Actions());
 
-	//prodMngr->TryBuildSupplyDepot();
-	//prodMngr->TryBuildRefinery();
-	//prodMngr->TryBuildCommandCenter();
-	//prodMngr->TryBuildBarracks();
-	//prodMngr->TryBuildEngineeringBay();
-	//prodMngr->TryBuildTurrets();
-	//prodMngr->TryBuildFactory();
-	//prodMngr->TryBuildStarPort();
-	//prodMngr->TryBuildFusionCore();
+	prodMngr->TryBuildSupplyDepot();
+	prodMngr->TryBuildRefinery();
+	prodMngr->TryBuildCommandCenter();
+	prodMngr->TryBuildBarracks();
+	prodMngr->TryBuildEngineeringBay();
+	prodMngr->TryBuildTurrets();
+	prodMngr->TryBuildFactory();
+	prodMngr->TryBuildStarPort();
+	prodMngr->TryBuildFusionCore();
 }
 
 void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 {
+	prodMngr->SetObservationAndActions(Observation(), Actions());
+	combatMngr->SetObservationAndActions(Observation(), Actions());
 	switch (unit->unit_type.ToType()) {
 		case UNIT_TYPEID::TERRAN_COMMANDCENTER:
 		{
@@ -45,7 +47,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 
 		case UNIT_TYPEID::TERRAN_SCV:
 		{
-			//prodMngr->OnIdleSCV(unit); 
+			prodMngr->OnIdleSCV(unit); 
 			break;
 		}
 
