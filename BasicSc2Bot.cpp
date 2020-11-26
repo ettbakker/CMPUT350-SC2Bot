@@ -2,7 +2,8 @@
 
 void BasicSc2Bot::OnGameStart() 
 { 
-	strategyManager = new StrategyManager();
+	prodMngr = new ProductionManager();
+	combatMngr = new CombatManager();
 
 	std::cout << "hello, World!" << std::endl;
 	return; 
@@ -19,29 +20,37 @@ void BasicSc2Bot::OnGameOver() {
 
 void BasicSc2Bot::OnStep()
 {
+	prodMngr->TryBuildSupplyDepot();
+	prodMngr->TryBuildRefinery();
+	prodMngr->TryBuildCommandCenter();
+	prodMngr->TryBuildBarracks();
+	prodMngr->TryBuildEngineeringBay();
+	prodMngr->TryBuildTurrets();
+	prodMngr->TryBuildFactory();
+	prodMngr->TryBuildStarPort();
+	prodMngr->TryBuildFusionCore();
+}
+
+void BasicSc2Bot::OnUnitIdle(const Unit* unit)
+{
 
 }
 
+/**
 void BasicSc2Bot::ExecuteCommand(const Command& cmd) {
-	Units units = cmd.get_units();
-	AbilityID ability = cmd.get_ability();
+	Units units = cmd.GetUnits();
+	AbilityID ability = cmd.GetAbility();
 	const Unit* target;
 	Point2D point;
 
-	if (cmd.get_point(point)) {
+	if (cmd.GetPoint(point)) {
 		Actions()->UnitCommand(units, ability, point);
 	} 
-	else if (cmd.get_target(&target)) {
+	else if (cmd.GetTarget(&target)) {
 		Actions()->UnitCommand(units, ability, target);
 	}
 	else {
 		Actions()->UnitCommand(units, ability);
 	}
 }
-
-
-
-void BasicSc2Bot::OnUnitIdle(const Unit* unit)
-{
-	
-}
+*/

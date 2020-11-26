@@ -1,9 +1,11 @@
 #include "StrategyManager.h"
+#include "sc2api/sc2_api.h"
 
 StrategyManager::StrategyManager()
 {
 	prodMngr = new ProductionManager();
 	combatMngr = new CombatManager();
+	stepPlan = new CommandSequence();
 }
 
 StrategyManager::~StrategyManager()
@@ -12,16 +14,19 @@ StrategyManager::~StrategyManager()
 	delete combatMngr;
 }
 
-void StrategyManager::planStep(CommandSequence& step_commands) 
-{
-
+void StrategyManager::PlanStep() {
+	//Actions()->UnitCommand();
 }
 
-bool StrategyManager::getNextCommand(Command& next_cmd) {
-	if (!plan.isEmpty()) {
-		next_cmd = plan.front();
-		plan.popFront();
+bool StrategyManager::GetNextCommand(Command& next_cmd) {
+	if (!stepPlan->IsEmpty()) {
+		next_cmd = stepPlan->Front();
+		stepPlan->PopFront();
 	}
 
 	return false;
+}
+
+void StrategyManager::PlanOnIdle(const Unit* unit, CommandSequence& idle_cmds) {
+
 }

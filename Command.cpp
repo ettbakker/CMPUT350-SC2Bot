@@ -2,7 +2,24 @@
 
 // Command class methods
 
-Command::Command(const sc2::Units& units, sc2::AbilityID ability)
+Command::Command() : has_target(false), has_point(false), target(nullptr) { }
+
+Command::Command(const Unit* unit, AbilityID ability) {
+	Units units = { unit };
+	Command(units, ability);
+}
+
+Command::Command(const Unit* unit, AbilityID ability, Point2D point) {
+	Units units = { unit };
+	Command(units, ability, point);
+}
+
+Command::Command(const Unit* unit, AbilityID ability, const Unit* target) {
+	Units units = { unit };
+	Command(units, ability, target);
+}
+
+Command::Command(const Units& units, AbilityID ability)
 	: has_target(false), has_point(false)
 {
 	assert(units.size() > 0);
@@ -11,46 +28,50 @@ Command::Command(const sc2::Units& units, sc2::AbilityID ability)
 
 }
 
-Command::Command(const sc2::Units& units, sc2::AbilityID ability, sc2::Point2D point)
+Command::Command(const Units& units, AbilityID ability, Point2D point)
 	: Command(units, ability)
 {
 	this->point = point;
 	has_target = false;
 }
 
-Command::Command(const sc2::Units& units, sc2::AbilityID ability, const sc2::Unit* target)
+Command::Command(const Units& units, AbilityID ability, const Unit* target)
 	: Command(units, ability)
 {
 	this->target = target;
 	has_target = true;
 }
 
-sc2::Units Command::get_units() const { return units; }
+Units Command::GetUnits() const { return units; }
 
-sc2::AbilityID Command::get_ability() const { return ability; }
+AbilityID Command::GetAbility() const { return ability; }
 
-bool Command::get_point(sc2::Point2D& point) const {
+bool Command::GetPoint(Point2D& point) const {
 	if (has_point) { point = this->point; }
 	return has_point;
 }
-bool Command::get_target(const sc2::Unit** target) const {
+bool Command::GetTarget(const Unit** target) const {
 	if (has_target) { *target = this->target; }
 	return has_target;
 }
 
 // CommandSequence class methods
 
-void CommandSequence::pushBack(const Command& cmd) {
+void CommandSequence::PushBack(const Command& cmd) {
 	commands.push_back(cmd);
 }
 
-bool CommandSequence::isEmpty() const {
+bool CommandSequence::IsEmpty() const {
 	return commands.empty();
 }
 
-Command CommandSequence::front() const {
+Command CommandSequence::Front() const {
 	return commands.front();
 }
-void CommandSequence::popFront() {
+void CommandSequence::PopFront() {
 	commands.pop_front();
+}
+
+void CommandSequence::Clear() {
+	commands.clear();
 }

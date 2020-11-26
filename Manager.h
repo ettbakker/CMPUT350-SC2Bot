@@ -1,18 +1,17 @@
 #pragma once
+#include "sc2api/sc2_api.h"
+#include <sc2api\sc2_unit_filters.h>
+#include "BoundingBox.h"
 #include "Command.h"
 
-namespace sc2 {
-	class Manager {
-		class BasicSc2Bot;
-	public:
-		Manager(BasicSc2Bot* bot) : bot(bot) { }
-		virtual ~Manager() { }
-		void ExecuteCommand(const Command& cmd) {
-			
-		}
+using namespace sc2;
 
-	private:
-		BasicSc2Bot* bot;
-	};
-
-}
+class Manager : public Agent {
+public:
+	size_t CountUnitType(UNIT_TYPEID unit_type);
+	const Unit* GetNearestUnit(const Point2D& point, UNIT_TYPEID unit_type);
+	Point2D GetStartPoint();
+	void SendActions();
+private:
+	CommandSequence commands;
+};

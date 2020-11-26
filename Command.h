@@ -3,33 +3,41 @@
 #include <cassert>
 #include "sc2api/sc2_api.h"
 
+using namespace sc2;
 
 class Command {
 public:
-	Command(const sc2::Units& units, sc2::AbilityID ability);
-	Command(const sc2::Units& units, sc2::AbilityID ability, sc2::Point2D point);
-	Command(const sc2::Units& units, sc2::AbilityID ability, const sc2::Unit* target);
+	Command();
 
-	sc2::Units get_units() const;
-	sc2::AbilityID get_ability() const;
-	bool get_point(sc2::Point2D& point) const;
-	bool get_target(const sc2::Unit** target) const;
+	Command(const Unit* unit, AbilityID ability);
+	Command(const Unit* unit, AbilityID ability, Point2D point);
+	Command(const Unit* unit, AbilityID ability, const Unit* target);
+
+	Command(const Units& units, AbilityID ability);
+	Command(const Units& units, AbilityID ability, Point2D point);
+	Command(const Units& units, AbilityID ability, const Unit* target);
+
+	Units GetUnits() const;
+	AbilityID GetAbility() const;
+	bool GetPoint(Point2D& point) const;
+	bool GetTarget(const Unit** target) const;
 
 private:
-	sc2::Units units;
-	sc2::AbilityID ability;
+	Units units;
+	AbilityID ability;
 	bool has_target, has_point;
 
-	const sc2::Unit* target;
-	sc2::Point2D point;
+	const Unit* target;
+	Point2D point;
 };
 
 class CommandSequence {
 public:
-	void pushBack(const Command& cmd);
-	bool isEmpty() const;
-	Command front() const;
-	void popFront();
+	void PushBack(const Command& cmd);
+	bool IsEmpty() const;
+	Command Front() const;
+	void PopFront();
+	void Clear();
 private:
 	std::deque<Command> commands;
 };
