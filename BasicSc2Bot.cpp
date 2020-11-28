@@ -39,21 +39,28 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 	prodMngr->SetObservationAndActions(Observation(), Actions());
 	combatMngr->SetObservationAndActions(Observation(), Actions());
 	switch (unit->unit_type.ToType()) {
+		// buildings
 		case UNIT_TYPEID::TERRAN_COMMANDCENTER:
 		{
 			prodMngr->OnIdleCommandCenter(unit); 
 			break;
 		}
 
+		case UNIT_TYPEID::TERRAN_BARRACKS:
+		{
+			prodMngr->OnIdleBarracks(unit);  break;
+		}
+
+		case UNIT_TYPEID::TERRAN_ENGINEERINGBAY:
+		{
+			prodMngr->OnIdleEngineeringBay(unit);  break;
+		}
+
+		// units
 		case UNIT_TYPEID::TERRAN_SCV:
 		{
 			prodMngr->OnIdleSCV(unit); 
 			break;
-		}
-
-		case UNIT_TYPEID::TERRAN_BARRACKS:
-		{
-			prodMngr->OnIdleBarracks(unit);  break;
 		}
 
 		case UNIT_TYPEID::TERRAN_MARINE:

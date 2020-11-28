@@ -80,6 +80,7 @@ public:
 	void OnIdleSCV(const Unit* unit);
 	void OnIdleCommandCenter(const Unit* unit);
 	void OnIdleBarracks(const Unit* unit);
+	void OnIdleEngineeringBay(const Unit* unit);
 
 	Point2D GetNearbyPoint(const Point2D& start_point, float build_radius = DEFAULT_BUILD_RADIUS);
 

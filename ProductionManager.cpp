@@ -373,6 +373,34 @@ void ProductionManager::OnIdleBarracks(const Unit* unit) {
 	actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
 }
 
+void ProductionManager::OnIdleEngineeringBay(const Unit* unit) {
+
+	auto upgrades = observation->GetUpgrades();
+	if (!upgrades.empty()) {
+		for (const auto& upgrade : upgrades)
+		{
+			// Upgrade weapons then level
+			// Level 2
+			if (upgrade == UPGRADE_ID::TERRANINFANTRYARMORSLEVEL1) {
+				actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYWEAPONSLEVEL2);
+			}
+			else if (upgrade == UPGRADE_ID::TERRANINFANTRYWEAPONSLEVEL2) {
+				actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYARMORLEVEL2);
+			}
+			// Level 3
+			else if (upgrade == UPGRADE_ID::TERRANINFANTRYARMORSLEVEL2) {
+				actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYWEAPONSLEVEL2);
+			}
+			else if (upgrade == UPGRADE_ID::TERRANINFANTRYWEAPONSLEVEL3) {
+				actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYARMORLEVEL2);
+			}
+		}
+	}
+	// Level 1
+	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYWEAPONS);
+	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYARMOR);
+}
+
 // Build utility methods
 Point2D ProductionManager::GetNearbyPoint(const Point2D& start_point, float build_radius)
 {
