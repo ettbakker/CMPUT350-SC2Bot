@@ -7,9 +7,11 @@
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
 #include <sc2api\sc2_unit_filters.h>
+#include "Manager.h"
+#include "ProductionManager.h"
+#include "CombatManager.h"
 #include <iostream>
-#include "Builder.h"
-#include "BotFunctions.h"
+#include <algorithm>
 
 using namespace sc2;
 
@@ -22,18 +24,26 @@ public:
 	size_t CountUnitType(UNIT_TYPEID unit_type);
 
 private:
-	
-	bool ManageSCV();
-	bool GiveSCVACommand(const Unit* unit);
+	//Multiple-use Functions
+	size_t CountUnitType(UNIT_TYPEID unit_type);
+	bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::TERRAN_SCV);
+	bool TryBuildStructureAtPoint(ABILITY_ID ability_type_for_structure, Point2D point, UNIT_TYPEID unit_type = UNIT_TYPEID::TERRAN_SCV);
+	const Unit* FindNearestUnit(const Point2D& start, UNIT_TYPEID unit_type);
+
+	//Build Buildings
+	bool TryBuildSupplyDepot();
+	bool TryBuildRefinery();
+	bool TryBuildCommandCenter();
+	bool TryBuildBarracks();
+	bool TryBuildEngineeringBay();
+	bool TryBuildTurrets();
 
 	//Attacking
 	bool AttackEnemy();
 	bool fixBuildings();
-	void resetBasesNumber();
-	
 
 	//Variables
-	size_t numberIdleMarines = 0;
+	size_t randomMarineLocation = 0;
 	bool enemySpotted = false;
 	BotFunctions *botFunctions = new BotFunctions();
 	Builder *builder = new Builder();
