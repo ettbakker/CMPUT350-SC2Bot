@@ -6,6 +6,7 @@ using namespace sc2;
 
 
 struct BoundingBox {
+	BoundingBox() { }
 	BoundingBox(const Point2D& p, float w, float h) : p(p), w(w), h(h) { }
 	BoundingBox(const Point2D& top_left, const Point2D& bottom_right) : p(top_left)
 	{

@@ -21,16 +21,16 @@ public:
 	virtual void OnStep();
 	virtual void OnUnitIdle(const Unit* unit);
 	virtual void OnGameOver();
+	void BasicSc2Bot::resetBasesNumber();
 
 private:
-	//void ExecuteCommand(const Command& cmd);
-	//void RunManagerCommands(Manager* mngr);
-
 	// Variables
 	ProductionManager* prodMngr;
 	CombatManager* combatMngr;
 	size_t randomMarineLocation = 0;
 	bool enemySpotted = false;
+	Bases bases;
+	int resetBasesNumberInNumSteps = 0;
 };
 
 #endif
