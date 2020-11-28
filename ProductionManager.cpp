@@ -418,6 +418,61 @@ bool ProductionManager::TryBuildFusionCore(const BoundingBox& box) {
 // On-idle methods
 
 void ProductionManager::OnIdleSCV(const Unit* unit) {
+
+	const GameInfo& game_info = observation->GetGameInfo();
+	const Unit* bestCommandCenter = GetBestNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_COMMANDCENTER, Unit::Alliance::Self);
+	const Unit* mineral_target;
+	bool foundSomething = true;
+	//Search for a mineral field or refinery that isn't full
+	if (!bestCommandCenter) {
+		mineral_target = GetBestNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_REFINERY, Unit::Alliance::Self);
+	}
+	else {
+		mineral_target = GetBestNearestUnit(bestCommandCenter->pos, UNIT_TYPEID::TERRAN_REFINERY, Unit::Alliance::Self);
+	}
+	if (!mineral_target) {
+		if (!bestCommandCenter) {
+			foundSomething = false;
+		}
+		else {
+			mineral_target = GetBestNearestUnit(bestCommandCenter->pos, UNIT_TYPEID::NEUTRAL_MINERALFIELD);
+			if (!mineral_target) {
+				foundSomething = false;
+			}
+		}
+	}
+	//If found an empty mineral field send it there
+	if (foundSomething) {
+		Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
+	}
+	//Else give it another command
+	else {
+		//Give a dummy command and send somewhere else. Possibly build a command center somewhere
+		if (bases.size() < 3) {
+			int j = 0;
+			Point2D potentialLocation;
+			while (j < 50) {
+				j++;
+				float rx = GetRandomScalar();
+				float ry = GetRandomScalar();
+				potentialLocation = Point2D(bases[0]->origin.x + rx * 60.0f, bases[0]->origin.y + ry * 60.0f);
+				if ((DistanceSquared2D(potentialLocation, bases[0]->origin) > 3200) && (potentialLocation.x > 40) && (potentialLocation.y > 40) && (potentialLocation.x < 110) && (potentialLocation.y < 110)) {
+					Actions()->UnitCommand(unit, ABILITY_ID::BUILD_COMMANDCENTER, potentialLocation);
+					bases.push_back(new Base(potentialLocation));
+					std::cout << "Trying to add new base " << "X: " << potentialLocation.x << " Y: " << potentialLocation.y << std::endl;
+					break;
+				}
+			}
+		}
+
+		//No extra bases to create so just send it to the closest command center for managing later.
+		mineral_target = GetNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_COMMANDCENTER);
+		Actions()->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
+
+	}
+	
+
+
 	const Unit* mineral_target = GetNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_REFINERY);
 	if (!mineral_target) {
 		mineral_target = GetNearestUnit(unit->pos, UNIT_TYPEID::NEUTRAL_MINERALFIELD);
