@@ -6,7 +6,6 @@ void BasicSc2Bot::OnGameStart()
 	combatMngr = new CombatManager();
 
 	std::cout << "hello, World!" << std::endl;
-	bases.push_back(Observation()->GetStartLocation());
 	return; 
 }
 
