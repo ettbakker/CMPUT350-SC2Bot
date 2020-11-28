@@ -21,37 +21,16 @@ public:
 	virtual void OnStep();
 	virtual void OnUnitIdle(const Unit* unit);
 	virtual void OnGameOver();
-	size_t CountUnitType(UNIT_TYPEID unit_type);
 
 private:
-	//Multiple-use Functions
-	size_t CountUnitType(UNIT_TYPEID unit_type);
-	bool TryBuildStructure(ABILITY_ID ability_type_for_structure, UNIT_TYPEID unit_type = UNIT_TYPEID::TERRAN_SCV);
-	bool TryBuildStructureAtPoint(ABILITY_ID ability_type_for_structure, Point2D point, UNIT_TYPEID unit_type = UNIT_TYPEID::TERRAN_SCV);
-	const Unit* FindNearestUnit(const Point2D& start, UNIT_TYPEID unit_type);
+	//void ExecuteCommand(const Command& cmd);
+	//void RunManagerCommands(Manager* mngr);
 
-	//Build Buildings
-	bool TryBuildSupplyDepot();
-	bool TryBuildRefinery();
-	bool TryBuildCommandCenter();
-	bool TryBuildBarracks();
-	bool TryBuildEngineeringBay();
-	bool TryBuildTurrets();
-
-	//Attacking
-	bool AttackEnemy();
-	bool fixBuildings();
-
-	//Variables
+	// Variables
+	ProductionManager* prodMngr;
+	CombatManager* combatMngr;
 	size_t randomMarineLocation = 0;
 	bool enemySpotted = false;
-	BotFunctions *botFunctions = new BotFunctions();
-	Builder *builder = new Builder();
-
-	//Bases
-	std::vector<Point2D> bases;
-	int resetBasesNumberInNumSteps = 0;
-
 };
 
 #endif
