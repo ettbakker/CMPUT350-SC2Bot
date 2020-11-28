@@ -14,9 +14,12 @@ class ProductionManager : public Manager {
 public:
 	ProductionManager();
 
+	void BuildStructures();
+
 	bool TryBuildStructureNearPoint(ABILITY_ID build_ability, Point2D point, float build_radius = DEFAULT_BUILD_RADIUS, const Unit* builder_unit = nullptr);
 	bool TryBuildStructureInBox(ABILITY_ID build_ability, const BoundingBox& box, const Unit* builder_unit = nullptr);
 	bool TryBuildStructureAtUnit(ABILITY_ID build_ability, const Unit* target_unit, const Unit* builder_unit = nullptr);
+	bool TryBuildStructureInBase(ABILITY_ID build_ability, const Base* base, const Unit* builder_unit = nullptr);
 
 	// Build Refinery Methods
 	bool TryBuildRefinery(const Unit* target_geyser = nullptr);
@@ -45,6 +48,12 @@ public:
 	bool TryBuildEngineeringBay(float build_radius=DEFAULT_BUILD_RADIUS);
 	bool TryBuildEngineeringBay(Point2D point, float build_radius=DEFAULT_BUILD_RADIUS);
 	bool TryBuildEngineeringBay(const BoundingBox& box);
+
+	// Build Armory Methods
+	bool CanBuildArmory();
+	bool TryBuildArmory(float build_radius = DEFAULT_BUILD_RADIUS);
+	bool TryBuildArmory(Point2D point, float build_radius = DEFAULT_BUILD_RADIUS);
+	bool TryBuildArmory(const BoundingBox& box);
 
 	// Build Turrets Methods
 	bool CanBuildTurret();
@@ -81,12 +90,15 @@ public:
 	void OnIdleCommandCenter(const Unit* unit);
 	void OnIdleBarracks(const Unit* unit);
 	void OnIdleEngineeringBay(const Unit* unit);
-
+  void OnIdleArmory(const Unit* unit);
+  
 	void TryBuildAddOn(const Unit* unit, ABILITY_ID add_on_ability);
-
+	
 	Point2D GetNearbyPoint(const Point2D& start_point, float build_radius = DEFAULT_BUILD_RADIUS);
 
 	const Unit* GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYPEID builder_type = UNIT_TYPEID::TERRAN_SCV);
+
+	bool fixBuildings();
 
 private:
 };

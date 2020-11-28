@@ -4,7 +4,8 @@ void BasicSc2Bot::OnGameStart()
 { 
 	prodMngr = new ProductionManager();
 	combatMngr = new CombatManager();
-
+	bases.push_back(new Base(Observation()->GetStartLocation()));
+	std::cout << "We have bases?" << bases.size() << "\n";
 	std::cout << "hello, World!" << std::endl;
 	return; 
 }
@@ -16,12 +17,20 @@ void BasicSc2Bot::OnGameOver() {
 		std::cout << r.player_id << r.result << std::endl;
 	}
 	std::cout << "Game Over" << std::endl;
+
+	delete prodMngr;
+	delete combatMngr;
+	for (auto b : bases) {
+		delete b;
+	}
 }
 
 void BasicSc2Bot::OnStep()
 {
-	prodMngr->SetObservationAndActions(Observation(), Actions());
-	combatMngr->SetObservationAndActions(Observation(), Actions());
+	prodMngr->SetObservationAndActions(Observation(), Actions(), bases);
+	combatMngr->SetObservationAndActions(Observation(), Actions(), bases);
+
+	prodMngr->BuildStructures();
 
 	prodMngr->TryBuildSupplyDepot();
 	prodMngr->TryBuildRefinery();
@@ -29,15 +38,21 @@ void BasicSc2Bot::OnStep()
 	prodMngr->TryBuildBarracks();
 	prodMngr->TryBuildEngineeringBay();
 	prodMngr->TryBuildTurrets();
+	prodMngr->TryBuildArmory();
 	prodMngr->TryBuildFactory();
-	prodMngr->TryBuildStarPort();
-	prodMngr->TryBuildFusionCore();
+	//prodMngr->TryBuildStarPort();
+	//prodMngr->TryBuildFusionCore();
+	//prodMngr->fixBuildings();
+
+	//resetBasesNumber();
+	
 }
 
 void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 {
-	prodMngr->SetObservationAndActions(Observation(), Actions());
-	combatMngr->SetObservationAndActions(Observation(), Actions());
+	prodMngr->SetObservationAndActions(Observation(), Actions(), bases);
+	combatMngr->SetObservationAndActions(Observation(), Actions(), bases);
+
 	switch (unit->unit_type.ToType()) {
 		// buildings
 		case UNIT_TYPEID::TERRAN_COMMANDCENTER:
@@ -78,34 +93,29 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 	}
 }
 
-/**
-void BasicSc2Bot::RunManagerCommands(Manager* mngr) {
-	Command cmd;
-	
-	while (!(mngr->commands.IsEmpty())) {
-		cmd = mngr->commands.Front();
-		ExecuteCommand(cmd);
-		mngr->commands.PopFront();
-	}
-}
+void BasicSc2Bot::resetBasesNumber() {
 
-void BasicSc2Bot::ExecuteCommand(const Command& cmd) {
-	const Unit* unit = cmd.GetUnit();
-	AbilityID ability = cmd.GetAbility();
-	const Unit* target;
-	Point2D point;
-	
-	if (cmd.GetPoint(point)) {
-		std::cout << "Doing cmd with point\n";
-		Actions()->UnitCommand(unit, ability, point);
-	} 
-	else if (cmd.GetTarget(&target)) {
-		std::cout << "Cmd with target unit\n";
-		Actions()->UnitCommand(unit, ability, target);
+	if (resetBasesNumberInNumSteps == 20) {
+		Units commandCenters = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_COMMANDCENTER));
+		for (int i = 0; i < bases.size(); i++) {
+			bool stillABase = false;
+			for (auto c : commandCenters) {
+				//There is still a command center near that base location
+				if (DistanceSquared2D(c->pos, bases[i]->origin) < 10) {
+					stillABase = true;
+					break;
+				}
+			}
+			//There is no command center near this base so remove it from our base list
+			if (!stillABase) {
+				std::cout << "base erased" << std::endl;
+				bases.erase(bases.begin() + i);
+			}
+		}
 	}
-	else {
-		std::cout << "Cmd with only ability\n";
-		Actions()->UnitCommand(unit, ability);
+	else if (resetBasesNumberInNumSteps == 50) {
+		resetBasesNumberInNumSteps = -1;
 	}
+
+	++resetBasesNumberInNumSteps;
 }
-*/

@@ -5,6 +5,31 @@ ProductionManager::ProductionManager()
 	
 }
 
+void ProductionManager::BuildStructures() {
+	Point2D building_point;
+
+	for (auto base : bases) {
+		const Unit* commandCenterAtLocation = GetNearestUnit(base->origin, UNIT_TYPEID::TERRAN_COMMANDCENTER, Unit::Alliance::Self);
+		if (!commandCenterAtLocation) {
+			continue;
+		}
+		else if (DistanceSquared2D(commandCenterAtLocation->pos, base->origin) < 10) {
+			//There is a command center at the start location or near it then we can build buildings around that command center.
+			//Allows us to have multiple bases with their own economies
+			building_point = base->origin;
+			TryBuildSupplyDepot(building_point);
+			TryBuildBarracks(building_point);
+			TryBuildCommandCenter(building_point);
+			TryBuildEngineeringBay(building_point);
+			TryBuildFactory(building_point);
+			TryBuildArmory(building_point);
+			TryBuildTurrets(building_point);
+			TryBuildRefinery(building_point);
+
+		}
+	}
+}
+
 // Generic methods for attempting to build any structure
 
 bool ProductionManager::TryBuildStructureNearPoint(ABILITY_ID build_ability, Point2D point, float build_radius, const Unit* builder_unit) {
@@ -36,6 +61,12 @@ bool ProductionManager::TryBuildStructureAtUnit(ABILITY_ID build_ability, const 
 
 	actions->UnitCommand(builder_unit, build_ability, target_unit);
 	return true;
+}
+
+bool ProductionManager::TryBuildStructureInBase(ABILITY_ID build_ability, const Base* base, const Unit* builder_unit)
+{
+	// TODO: Build w.r.t. base
+	return false;
 }
 
 // Methods for verifying whether a certain structure can be built
@@ -243,6 +274,42 @@ bool ProductionManager::TryBuildEngineeringBay(const BoundingBox& box) {
 	return TryBuildStructureInBox(ABILITY_ID::BUILD_ENGINEERINGBAY, box);
 }
 
+bool ProductionManager::CanBuildArmory()
+{
+	if (CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) < 1) {
+		return false;
+	}
+	if (CountUnitType(UNIT_TYPEID::TERRAN_ARMORY) >= 2) {
+		return false;
+	}
+	return true;
+}
+
+bool ProductionManager::TryBuildArmory(float build_radius)
+{
+	if (!CanBuildArmory()) {
+		return false;
+	}
+	Point2D point = GetStartPoint();
+	return TryBuildStructureNearPoint(ABILITY_ID::BUILD_ARMORY, point, build_radius);
+}
+
+bool ProductionManager::TryBuildArmory(Point2D point, float build_radius)
+{
+	if (!CanBuildArmory()) {
+		return false;
+	}
+	return TryBuildStructureNearPoint(ABILITY_ID::BUILD_ARMORY, point, build_radius);
+}
+
+bool ProductionManager::TryBuildArmory(const BoundingBox& box)
+{
+	if (!CanBuildArmory()) {
+		return false;
+	}
+	return TryBuildStructureInBox(ABILITY_ID::BUILD_ARMORY, box);
+}
+
 // Build Turrets Methods
 bool ProductionManager::TryBuildTurrets(float build_radius) {
 	if (!CanBuildTurret()) {
@@ -363,10 +430,15 @@ void ProductionManager::OnIdleSCV(const Unit* unit) {
 }
 
 void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
+
 	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 1) {
 		actions->UnitCommand(unit, ABILITY_ID::MORPH_ORBITALCOMMAND);
 	}
 	actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
+
+	if (CountUnitType(UNIT_TYPEID::TERRAN_SCV) < 30 * bases.size()) {
+		actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
+	}
 }
 
 void ProductionManager::OnIdleBarracks(const Unit* unit) {
@@ -422,6 +494,30 @@ void ProductionManager::TryBuildAddOn(const Unit* unit, ABILITY_ID add_on_abilit
 		}
 		actions->UnitCommand(u, add_on_ability);
 	}
+
+void ProductionManager::OnIdleArmory(const Unit* unit) {
+	std::vector<UpgradeID> upgrades = observation->GetUpgrades();
+
+
+	for (auto u : upgrades) {
+		if (u == UPGRADE_ID::TERRANVEHICLEANDSHIPWEAPONSLEVEL3) {
+			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEANDSHIPPLATINGLEVEL3);
+			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANSHIPWEAPONSLEVEL3);
+			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEWEAPONSLEVEL3);
+			break;
+		}
+		if (u == UPGRADE_ID::TERRANVEHICLEANDSHIPWEAPONSLEVEL2) {
+			std::cout << "Reasearching" << std::endl;
+			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEANDSHIPPLATINGLEVEL2);
+			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANSHIPWEAPONSLEVEL2);
+			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEWEAPONSLEVEL2);
+			break;
+		}
+	}
+
+	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEANDSHIPPLATINGLEVEL1);
+	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANSHIPWEAPONSLEVEL1);
+	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEWEAPONSLEVEL1);
 }
 
 // Build utility methods
@@ -451,4 +547,37 @@ const Unit* ProductionManager::GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYP
 	}
 
 	return unit_to_build;
+}
+
+bool ProductionManager::fixBuildings() {
+	Units units = observation->GetUnits();
+
+	for (auto u : units) {
+		if (u->health < u->health_max) {
+			//std::cout << "Building Damaged" << std::endl;
+			// Also get an scv to build the structure.
+			const Unit* unit_to_build = nullptr;
+			Units scvUnit = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_SCV));
+			for (const auto& unit : scvUnit)
+			{
+				for (const auto& order : unit->orders)
+				{
+					if (order.ability_id == ABILITY_ID::SMART)
+					{
+						return false;
+					}
+				}
+				unit_to_build = unit;
+
+			}
+
+
+			actions->UnitCommand(unit_to_build, ABILITY_ID::SMART, u);
+
+		}
+	}
+
+
+
+	return false;
 }
