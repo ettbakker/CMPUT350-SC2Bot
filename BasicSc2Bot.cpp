@@ -109,5 +109,6 @@ void BasicSc2Bot::resetBasesNumber() {
 	else if (resetBasesNumberInNumSteps == 50) {
 		resetBasesNumberInNumSteps = -1;
 	}
+
 	++resetBasesNumberInNumSteps;
 }
