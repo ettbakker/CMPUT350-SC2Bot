@@ -363,6 +363,9 @@ void ProductionManager::OnIdleSCV(const Unit* unit) {
 }
 
 void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
+	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 1) {
+		actions->UnitCommand(unit, ABILITY_ID::MORPH_ORBITALCOMMAND);
+	}
 	actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
 }
 
@@ -370,6 +373,10 @@ void ProductionManager::OnIdleBarracks(const Unit* unit) {
 	/*if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
 	Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
 	}*/
+	if (unit->add_on_tag == 0)
+	{
+		TryBuildAddOn(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
+	}
 	actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
 }
 
@@ -399,6 +406,22 @@ void ProductionManager::OnIdleEngineeringBay(const Unit* unit) {
 	// Level 1
 	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYWEAPONS);
 	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYARMOR);
+}
+
+void ProductionManager::TryBuildAddOn(const Unit* unit, ABILITY_ID add_on_ability) {
+
+	if (CountUnitType(unit->unit_type) < 2) {
+		return;
+	}
+	Filter unit_t = IsUnit(unit->unit_type);
+	Units units = observation->GetUnits(unit_t);
+
+	for (const auto& u : units) {
+		if (u->build_progress != 1) {
+			return;
+		}
+		actions->UnitCommand(u, add_on_ability);
+	}
 }
 
 // Build utility methods

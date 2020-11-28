@@ -82,6 +82,8 @@ public:
 	void OnIdleBarracks(const Unit* unit);
 	void OnIdleEngineeringBay(const Unit* unit);
 
+	void TryBuildAddOn(const Unit* unit, ABILITY_ID add_on_ability);
+
 	Point2D GetNearbyPoint(const Point2D& start_point, float build_radius = DEFAULT_BUILD_RADIUS);
 
 	const Unit* GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYPEID builder_type = UNIT_TYPEID::TERRAN_SCV);
