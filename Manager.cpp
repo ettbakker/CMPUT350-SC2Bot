@@ -5,6 +5,19 @@ size_t Manager::CountUnitType(UNIT_TYPEID unit_type)
 	return observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
 
+//Count the number of units within a specific radius of a point
+size_t Manager::CountUnitTypeFromPoint(UNIT_TYPEID unit_type, Point2D point, int search_radius)
+{
+	size_t number = 0;
+	Units units = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
+	for (auto u : units) {
+		if (Distance2D(u->pos, point) < search_radius) {
+			++number;
+		}
+	}
+	return number;
+}
+
 const Unit* Manager::GetNearestUnit(const Point2D& point, UNIT_TYPEID unit_type, Unit::Alliance alliance)
 {
 	Units units = observation->GetUnits(alliance);
@@ -25,6 +38,7 @@ const Unit* Manager::GetNearestUnit(const Point2D& point, UNIT_TYPEID unit_type,
 	return target;
 }
 
+//Get the best nearest unit (so nearest unit with some conditions)
 const Unit* Manager::GetBestNearestUnit(const Point2D& point, UNIT_TYPEID unit_type, Unit::Alliance alliance)
 {
 	Units units = observation->GetUnits(alliance);
@@ -52,7 +66,7 @@ const Unit* Manager::GetBestNearestUnit(const Point2D& point, UNIT_TYPEID unit_t
 
 			if (unit_type == UNIT_TYPEID::NEUTRAL_VESPENEGEYSER) {
 				//When trying to build on a geyser find out if a refinrey is already build on it by getting the distance to refineries
-				Units refineries = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_REFINERY));
+				Units refineries = observation->GetUnits(Unit::Alliance::Self, IsVisibleGeyser());
 				bool already = false;
 				for (auto r : refineries) {
 					if (DistanceSquared2D(u->pos, r->pos) < 5.0) {
@@ -85,4 +99,5 @@ void Manager::SetObservationAndActions(const ObservationInterface* obs, ActionIn
 	observation = obs;
 	actions = act;
 	bases = b;
+	building_point = GetStartPoint();
 }

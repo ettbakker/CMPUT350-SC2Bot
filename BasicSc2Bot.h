@@ -21,7 +21,6 @@ public:
 	virtual void OnStep();
 	virtual void OnUnitIdle(const Unit* unit);
 	virtual void OnGameOver();
-	void BasicSc2Bot::resetBasesNumber();
 
 private:
 	// Variables
@@ -30,7 +29,8 @@ private:
 	size_t randomMarineLocation = 0;
 	bool enemySpotted = false;
 	Bases bases;
-	int resetBasesNumberInNumSteps = 0;
+	bool AddBase(const Unit* unit);
+	size_t thirdBaseAttempt = 0;
 };
 
 #endif

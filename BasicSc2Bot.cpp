@@ -5,6 +5,7 @@ void BasicSc2Bot::OnGameStart()
 	prodMngr = new ProductionManager();
 	combatMngr = new CombatManager();
 	bases.push_back(new Base(Observation()->GetStartLocation()));
+	std::cout << "Start X: " << bases[0]->origin.x << " Y: " << bases[0]->origin.y << std::endl;
 	std::cout << "We have bases?" << bases.size() << "\n";
 	std::cout << "hello, World!" << std::endl;
 	return; 
@@ -29,22 +30,8 @@ void BasicSc2Bot::OnStep()
 {
 	prodMngr->SetObservationAndActions(Observation(), Actions(), bases);
 	combatMngr->SetObservationAndActions(Observation(), Actions(), bases);
-
 	prodMngr->BuildStructures();
-
-	prodMngr->TryBuildSupplyDepot();
-	prodMngr->TryBuildRefinery();
-	prodMngr->TryBuildCommandCenter();
-	prodMngr->TryBuildBarracks();
-	prodMngr->TryBuildEngineeringBay();
-	prodMngr->TryBuildTurrets();
-	prodMngr->TryBuildArmory();
-	prodMngr->TryBuildFactory();
-	//prodMngr->TryBuildStarPort();
-	//prodMngr->TryBuildFusionCore();
-	//prodMngr->fixBuildings();
-
-	//resetBasesNumber();
+	combatMngr->AttackEnemy();
 	
 }
 
@@ -74,7 +61,9 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 		// units
 		case UNIT_TYPEID::TERRAN_SCV:
 		{
-			prodMngr->OnIdleSCV(unit); 
+			if (!AddBase(unit)) {
+				prodMngr->OnIdleSCV(unit);
+			}
 			break;
 		}
 
@@ -93,29 +82,59 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 	}
 }
 
-void BasicSc2Bot::resetBasesNumber() {
-
-	if (resetBasesNumberInNumSteps == 20) {
-		Units commandCenters = Observation()->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_COMMANDCENTER));
-		for (int i = 0; i < bases.size(); i++) {
-			bool stillABase = false;
-			for (auto c : commandCenters) {
-				//There is still a command center near that base location
-				if (DistanceSquared2D(c->pos, bases[i]->origin) < 10) {
-					stillABase = true;
-					break;
+//Add a new base. Can't be in another class since they can't change bases
+//Very strange balance with the numbers needed to get it to build more than 2 bases
+//Adding a 3rd base right now works only sometimes, since I'm trying not to build bases too close together.
+bool BasicSc2Bot::AddBase(const Unit* unit) {
+	if ((bases.size() < 3) && (thirdBaseAttempt<20)) {
+		int j = 0;
+		Point2D potentialLocation;
+		float rx;
+		float ry;
+		bool suitable;
+		//Keep track of how many times we try to add a third base so we don't do this forever
+		//Sometimes it can't find a location
+		if (bases.size() == 2) {
+			++thirdBaseAttempt;
+		}
+		std::cout << "Searching for base " << bases.size()+1 << std::endl;
+		while (j < 50) {
+			++j;
+			rx = GetRandomScalar();
+			ry = GetRandomScalar();
+			potentialLocation = Point2D(bases[0]->origin.x + rx * 42.0f, bases[0]->origin.y + ry * 42.0f);
+			suitable = true;
+			//Check that its not too close to another base
+			if (bases.size() >=2) {
+				for (int l = 1; l < bases.size(); l++) {
+					if (Distance2D(potentialLocation, bases[l]->origin) < 30) {
+						suitable = false;
+						break;
+					}
 				}
 			}
-			//There is no command center near this base so remove it from our base list
-			if (!stillABase) {
-				std::cout << "base erased" << std::endl;
-				bases.erase(bases.begin() + i);
+			
+			//Check that its not near the edges of the map and somewhat further from the main base
+			if ((DistanceSquared2D(potentialLocation, bases[0]->origin) > 450) 
+				&& (potentialLocation.x > 20) && (potentialLocation.y > 20) 
+				&& (potentialLocation.x < 145) && (potentialLocation.y < 145)
+				&& suitable) {
+				Actions()->UnitCommand(unit, ABILITY_ID::BUILD_COMMANDCENTER, potentialLocation);
+				//prodMngr->TryBuildCommandCenter(50.0);
+				bases.push_back(new Base(potentialLocation));
+				std::cout << "Added a new base " << "X: " << potentialLocation.x << " Y: " << potentialLocation.y << std::endl;
+				return true;
 			}
 		}
 	}
-	else if (resetBasesNumberInNumSteps == 50) {
-		resetBasesNumberInNumSteps = -1;
+	if (thirdBaseAttempt == 20) {
+		std::cout << "Gave up looking for third base" << std::endl;
+		++thirdBaseAttempt;
 	}
-
-	++resetBasesNumberInNumSteps;
+	return false;
 }
+
+
+
+
+

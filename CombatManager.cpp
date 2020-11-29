@@ -33,11 +33,16 @@ bool CombatManager::AttackEnemy() {
 		//Send all units to the enemy
 		Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
 		Units sending = observation->GetUnits(Unit::Alliance::Self, filter);
+		for (auto s : sending) {
+			actions->UnitCommand(s, ABILITY_ID::ATTACK_ATTACK, target);
+		}
 		filter = IsUnit(UNIT_TYPEID::TERRAN_REAPER);
 		Units moreSending = observation->GetUnits(Unit::Alliance::Self, filter);
-		sending.insert(sending.end(), moreSending.begin(), moreSending.end());
+		for (auto s : moreSending) {
+			actions->UnitCommand(s, ABILITY_ID::ATTACK_ATTACK, target);
+		}
+		//Actions()->UnitCommand(moreSending, ABILITY_ID::ATTACK_ATTACK, target);
 
-		Actions()->UnitCommand(sending, ABILITY_ID::ATTACK_ATTACK, target);
 		//Reset idle marine count
 		numberIdleMarines = 0;
 
