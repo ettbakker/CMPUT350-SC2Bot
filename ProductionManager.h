@@ -81,6 +81,7 @@ public:
 	void OnIdleBarracks(const Unit* unit);
 	void OnIdleEngineeringBay(const Unit* unit);
 	void OnIdleArmory(const Unit* unit);
+	void OnIdleOrbitalCommand(const Unit* unit);
   
 	void TryBuildAddOn(const Unit* unit, ABILITY_ID add_on_ability);
 	

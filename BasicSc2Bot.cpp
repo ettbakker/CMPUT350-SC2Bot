@@ -58,6 +58,11 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 			prodMngr->OnIdleEngineeringBay(unit);  break;
 		}
 
+		case UNIT_TYPEID::TERRAN_ORBITALCOMMAND:
+		{
+			prodMngr->OnIdleOrbitalCommand(unit);  break;
+		}
+
 		// units
 		case UNIT_TYPEID::TERRAN_SCV:
 		{
@@ -71,10 +76,20 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 		{
 			combatMngr->OnIdleMarine(unit); break;
 		}
+
 		case UNIT_TYPEID::TERRAN_REAPER:
 		{
 			combatMngr->OnIdleReaper(unit); break;
 		}
+
+		case UNIT_TYPEID::TERRAN_MULE:
+		{
+			if (!AddBase(unit)) {
+				prodMngr->OnIdleSCV(unit);
+			}
+			break;
+		}
+
 		default:
 		{
 			break;
