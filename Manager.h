@@ -9,12 +9,16 @@ using namespace sc2;
 
 class Manager : public Agent {
 public:
-	size_t CountUnitType(UNIT_TYPEID unit_type);
+	size_t CountUnitType(UNIT_TYPEID unit_type); 
+	size_t CountUnitTypeFromPoint(UNIT_TYPEID unit_type, Point2D point, int search_radius = 30);
 	const Unit* GetNearestUnit(const Point2D& point, UNIT_TYPEID unit_type, Unit::Alliance alliance = Unit::Alliance::Neutral);
+	const Unit* GetBestNearestUnit(const Point2D& point, UNIT_TYPEID unit_type, Unit::Alliance alliance = Unit::Alliance::Neutral);
 	Point2D GetStartPoint();
 	void SetObservationAndActions(const ObservationInterface* obs, ActionInterface* act, Bases& b);
 	
 	const ObservationInterface* observation;
 	ActionInterface* actions;
 	Bases bases;
+	Point2D building_point;
+	
 };
