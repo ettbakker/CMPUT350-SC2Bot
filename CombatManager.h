@@ -12,5 +12,10 @@ public:
 
 	void OnIdleMarine(const Unit* unit);
 	void OnIdleReaper(const Unit* unit);
+
+	void checkForEnemyBase();
 private:
+
+	Point2D enemyStartLocation;
+	std::map<const Unit*, Point2D> scoutingMarines;
 };

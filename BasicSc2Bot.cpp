@@ -32,6 +32,7 @@ void BasicSc2Bot::OnStep()
 	prodMngr->TryBuildFactory();
 	prodMngr->TryBuildStarPort();
 	prodMngr->TryBuildFusionCore();
+	combatMngr->checkForEnemyBase();
 }
 
 void BasicSc2Bot::OnUnitIdle(const Unit* unit)
