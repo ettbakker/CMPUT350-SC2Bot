@@ -413,13 +413,16 @@ void ProductionManager::OnIdleSCV(const Unit* unit) {
 
 void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
 
-	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 3) {
+	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 2 
+		&& CountUnitType(UNIT_TYPEID::TERRAN_ORBITALCOMMAND) < 3) {
 		actions->UnitCommand(unit, ABILITY_ID::MORPH_ORBITALCOMMAND);
 	}
 	//actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
 
-	if (CountUnitType(UNIT_TYPEID::TERRAN_SCV) < 30 * bases.size()) {
-		actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
+	if (unit->assigned_harvesters < unit->ideal_harvesters) {
+		if (CountUnitType(UNIT_TYPEID::TERRAN_SCV) < 30 * bases.size()) {
+			actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
+		}
 	}
 }
 
@@ -460,6 +463,18 @@ void ProductionManager::OnIdleEngineeringBay(const Unit* unit) {
 	// Level 1
 	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYWEAPONS);
 	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYARMOR);
+}
+
+void ProductionManager::OnIdleOrbitalCommand(const Unit* unit) {
+	
+	actions->UnitCommand(unit, ABILITY_ID::EFFECT_CALLDOWNMULE, 
+		Point2D(unit->pos.x + GetRandomScalar() * 5.0f, unit->pos.y + GetRandomScalar() * 5.0f));
+
+	if (unit->assigned_harvesters < unit->ideal_harvesters) {
+		if (CountUnitType(UNIT_TYPEID::TERRAN_SCV) < 30 * bases.size()) {
+			actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
+		}
+	}
 }
 
 void ProductionManager::TryBuildAddOn(const Unit* unit, ABILITY_ID add_on_ability) {
