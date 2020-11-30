@@ -23,14 +23,14 @@ public:
 	virtual void OnGameOver();
 
 private:
-	//void ExecuteCommand(const Command& cmd);
-	//void RunManagerCommands(Manager* mngr);
-
 	// Variables
 	ProductionManager* prodMngr;
 	CombatManager* combatMngr;
 	size_t randomMarineLocation = 0;
 	bool enemySpotted = false;
+	Bases bases;
+	bool AddBase(const Unit* unit);
+	size_t thirdBaseAttempt = 0;
 };
 
 #endif

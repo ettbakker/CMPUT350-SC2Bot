@@ -3,6 +3,7 @@
 #include "BoundingBox.h"
 #include "Manager.h"
 #include "Command.h"
+#include "Base.h"
 
 using namespace sc2;
 
@@ -14,8 +15,12 @@ public:
 	void OnIdleReaper(const Unit* unit);
 
 	void CheckForEnemyBase();
+
+	bool AttackEnemy();
 private:
 
 	Point2D enemyStartLocation;
 	std::map<const Unit*, Point2D> scoutingMarines;
+
+	size_t numberIdleMarines = 0;
 };
