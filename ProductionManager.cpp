@@ -11,10 +11,10 @@ void ProductionManager::BuildStructures() {
 		
 		building_point = base->origin;
 		//If we can find a command center at the base
-		if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 50) >=1) {
+		//if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 50) >=1) {
 			//There is a command center at the start location or near it then we can build buildings around that command center.
 			//Allows us to have multiple bases with their own economies
-			TryBuildCommandCenter();
+			TryBuildCommandCenter(30.0);
 			TryBuildSupplyDepot();
 			TryBuildRefinery();
 			TryBuildBarracks();
@@ -22,11 +22,11 @@ void ProductionManager::BuildStructures() {
 			TryBuildFactory();
 			TryBuildArmory();
 			TryBuildTurrets(40.0);
-		}
+		/*}
 		else {
 			//Build a command center at the base location before we build anything else
 			TryBuildCommandCenter(5.0);
-		}
+		}*/
 	
 		
 	}
@@ -86,7 +86,7 @@ bool ProductionManager::TryBuildStructureInBase(ABILITY_ID build_ability, const 
 // Methods for verifying whether a certain structure can be built
 
 bool ProductionManager::CanBuildRefinery() {
-	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 100) >= 2) {
+	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 100) >= 2*bases.size()) {
 		return false;
 	}
 	return true;
@@ -554,13 +554,10 @@ bool ProductionManager::fixBuildings() {
 
 			}
 
-
 			actions->UnitCommand(unit_to_build, ABILITY_ID::SMART, u);
 
 		}
 	}
-
-
 
 	return false;
 }
