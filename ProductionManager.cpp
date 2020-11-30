@@ -94,9 +94,9 @@ bool ProductionManager::CanBuildRefinery() {
 
 bool ProductionManager::CanBuildSupplyDepot() {
 	// If we are not supply capped, don't build a supply depot.
-	/*if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2) {
+	if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2) {
 		return false;
-	}*/
+	}
 	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_SUPPLYDEPOT, building_point) >= 15) {
 		return false;
 	}
@@ -116,10 +116,11 @@ bool ProductionManager::CanBuildCommandCenter() {
 }
 
 bool ProductionManager::CanBuildBarracks() {
+	/**
 	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 2)
 	{
 		return false;
-	}
+	}*/
 
 	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 4)
 	{
@@ -137,14 +138,19 @@ bool ProductionManager::CanBuildEngineeringBay() {
 	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < 1) {
 		return false;
 	}
+
+	if (CountUnitType(UNIT_TYPEID::TERRAN_ENGINEERINGBAY) > bases.size()) {
+		return false;
+	}
 	return true;
 }
 
 bool ProductionManager::CanBuildFactory() {
+	/**
 	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 5)
 	{
 		return false;
-	}
+	}*/
 	if (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) < 3)
 	{
 		return false;
@@ -414,7 +420,7 @@ void ProductionManager::OnIdleSCV(const Unit* unit) {
 void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
 
 	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 2 
-		&& CountUnitType(UNIT_TYPEID::TERRAN_ORBITALCOMMAND) < 3) {
+		&& CountUnitType(UNIT_TYPEID::TERRAN_ORBITALCOMMAND) < bases.size() - 1) {
 		actions->UnitCommand(unit, ABILITY_ID::MORPH_ORBITALCOMMAND);
 	}
 	//actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
@@ -463,6 +469,16 @@ void ProductionManager::OnIdleEngineeringBay(const Unit* unit) {
 	// Level 1
 	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYWEAPONS);
 	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYARMOR);
+}
+
+void ProductionManager::OnIdleFactory(const Unit* unit)
+{
+	// Train 6 hellions for each base
+	size_t max_hellions = bases.size() * 6;
+	size_t total_hellions = CountUnitType(UNIT_TYPEID::TERRAN_HELLION) + CountUnitType(UNIT_TYPEID::TERRAN_HELLIONTANK);
+	if (total_hellions < max_hellions) {
+		actions->UnitCommand(unit, ABILITY_ID::TRAIN_HELLION);
+	}
 }
 
 void ProductionManager::OnIdleOrbitalCommand(const Unit* unit) {
@@ -547,35 +563,40 @@ const Unit* ProductionManager::GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYP
 	return unit_to_build;
 }
 
-bool ProductionManager::fixBuildings() {
+bool ProductionManager::FixBuildings() {
 	Units units = observation->GetUnits();
+	const Unit* unit_to_repair = nullptr;
 
 	for (auto u : units) {
 		if (u->health < u->health_max) {
 			//std::cout << "Building Damaged" << std::endl;
 			// Also get an scv to build the structure.
-			const Unit* unit_to_build = nullptr;
 			Units scvUnit = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_SCV));
 			for (const auto& unit : scvUnit)
 			{
+				bool already_repairing = false;
 				for (const auto& order : unit->orders)
 				{
-					if (order.ability_id == ABILITY_ID::SMART)
+					if (order.ability_id == ABILITY_ID::EFFECT_REPAIR)
 					{
-						return false;
+						already_repairing = true;
+						break;
 					}
 				}
-				unit_to_build = unit;
+				if (!already_repairing) {
+					unit_to_repair = unit;
+					break;
+				}
 
 			}
 
-
-			actions->UnitCommand(unit_to_build, ABILITY_ID::SMART, u);
+			if (unit_to_repair != nullptr) {
+				actions->UnitCommand(unit_to_repair, ABILITY_ID::EFFECT_REPAIR, u);
+				return true;
+			}
 
 		}
 	}
-
-
 
 	return false;
 }

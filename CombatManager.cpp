@@ -2,7 +2,7 @@
 
 CombatManager::CombatManager()
 {
-
+	InitArmyCounts();
 }
 
 bool CombatManager::AttackEnemy() {
@@ -51,6 +51,30 @@ bool CombatManager::AttackEnemy() {
 	return false;
 }
 
+void CombatManager::InitArmyCounts()
+{
+	for (auto type : TerranUnitCategories::ALL_COMBAT_UNITS()) {
+		army_counts[type] = 0;
+	}
+}
+
+void CombatManager::UpdateArmyCounts() 
+{
+	for (auto type : TerranUnitCategories::ALL_COMBAT_UNITS()) {
+		army_counts[type] = observation->GetUnits(Unit::Alliance::Self, IsUnit(type)).size();
+	}
+}
+
+size_t CombatManager::GetArmySize() {
+	size_t army_size = 0;
+
+	for (auto& it : army_counts) {
+		army_size += it.second;
+	}
+
+	return army_size;
+}
+
 void CombatManager::OnIdleMarine(const Unit* unit) {
 	const GameInfo& game_info = observation->GetGameInfo();
 	Point2D newPoint = observation->GetStartLocation();
@@ -64,7 +88,7 @@ void CombatManager::OnIdleMarine(const Unit* unit) {
 		newPoint = game_info.enemy_start_locations[randomMarineLocation];
 	}//Send others close to base
 	else {
-		newPoint = Point2D(newPoint.x + rx * 5.0f, newPoint.y + ry * 5.0f);
+		return OnIdleSmart(unit, UNIT_TYPEID::TERRAN_MARINE);
 	}
 	//Only send marines out if we have a small army
 	if (numberMarines > 30) {
@@ -73,6 +97,13 @@ void CombatManager::OnIdleMarine(const Unit* unit) {
 	numberIdleMarines += 1;
 }
 
-void CombatManager::OnIdleReaper(const Unit* unit) {
+void CombatManager::OnIdleSmart(const Unit* unit, UNIT_TYPEID unit_type) {
+	Point2D start = observation->GetStartLocation();
+	float rx = GetRandomScalar();
+	float ry = GetRandomScalar();
 
+	// If this unit is far from home base, send it back
+	if (DistanceSquared2D(start, unit->pos) > 30.0f) {
+		actions->UnitCommand(unit, ABILITY_ID::ATTACK_ATTACK, Point2D(start.x + rx * 5.0f, start.y + ry * 5.0f));
+	}
 }

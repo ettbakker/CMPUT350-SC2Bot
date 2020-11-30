@@ -69,6 +69,7 @@ const Unit* Manager::GetBestNearestUnit(const Point2D& point, UNIT_TYPEID unit_t
 				Units refineries = observation->GetUnits(Unit::Alliance::Self, IsVisibleGeyser());
 				bool already = false;
 				for (auto r : refineries) {
+					std::cout << "HELLO SIR\n";
 					if (DistanceSquared2D(u->pos, r->pos) < 5.0) {
 						already = true;
 						break;

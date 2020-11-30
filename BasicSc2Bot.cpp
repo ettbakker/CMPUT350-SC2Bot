@@ -31,6 +31,7 @@ void BasicSc2Bot::OnStep()
 	prodMngr->SetObservationAndActions(Observation(), Actions(), bases);
 	combatMngr->SetObservationAndActions(Observation(), Actions(), bases);
 	prodMngr->BuildStructures();
+	prodMngr->FixBuildings();
 	combatMngr->AttackEnemy();
 	
 }
@@ -63,6 +64,11 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 			prodMngr->OnIdleOrbitalCommand(unit);  break;
 		}
 
+		case UNIT_TYPEID::TERRAN_FACTORY:
+		{
+			prodMngr->OnIdleFactory(unit); break;
+		}
+
 		// units
 		case UNIT_TYPEID::TERRAN_SCV:
 		{
@@ -79,7 +85,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 
 		case UNIT_TYPEID::TERRAN_REAPER:
 		{
-			combatMngr->OnIdleReaper(unit); break;
+			combatMngr->OnIdleSmart(unit, UNIT_TYPEID::TERRAN_REAPER); break;
 		}
 
 		case UNIT_TYPEID::TERRAN_MULE:

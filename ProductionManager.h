@@ -9,7 +9,6 @@
 using namespace sc2;
 
 
-
 class ProductionManager : public Manager {
 public:
 	ProductionManager();
@@ -80,6 +79,7 @@ public:
 	void OnIdleCommandCenter(const Unit* unit);
 	void OnIdleBarracks(const Unit* unit);
 	void OnIdleEngineeringBay(const Unit* unit);
+	void OnIdleFactory(const Unit* unit);
 	void OnIdleArmory(const Unit* unit);
 	void OnIdleOrbitalCommand(const Unit* unit);
   
@@ -89,7 +89,7 @@ public:
 
 	const Unit* GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYPEID builder_type = UNIT_TYPEID::TERRAN_SCV);
 
-	bool fixBuildings();
+	bool FixBuildings();
 
 private:
 };
