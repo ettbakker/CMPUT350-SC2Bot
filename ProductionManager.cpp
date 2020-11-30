@@ -536,6 +536,7 @@ bool ProductionManager::fixBuildings() {
 	Units units = observation->GetUnits();
 
 	for (auto u : units) {
+		
 		if (u->health < u->health_max) {
 			//std::cout << "Building Damaged" << std::endl;
 			// Also get an scv to build the structure.
