@@ -35,7 +35,7 @@ void CombatManager::OnIdleReaper(const Unit* unit) {
 
 }
 
-void CombatManager::checkForEnemyBase()
+void CombatManager::CheckForEnemyBase()
 {	
 	Point2D testPoint;
 	if (enemyStartLocation != testPoint) {

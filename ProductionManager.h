@@ -85,5 +85,10 @@ public:
 
 	const Unit* GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYPEID builder_type = UNIT_TYPEID::TERRAN_SCV);
 
+	void TryRepairBuildings();
+	bool IsBuilding(const Unit* unit);
+
 private:
+
+	std::set<UNIT_TYPEID> building_IDs;
 };

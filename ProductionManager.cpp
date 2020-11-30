@@ -2,7 +2,14 @@
 
 ProductionManager::ProductionManager()
 {
-	
+	std::vector<UNIT_TYPEID> tempBuildingIDs = { UNIT_TYPEID::TERRAN_COMMANDCENTER, UNIT_TYPEID::TERRAN_ENGINEERINGBAY, UNIT_TYPEID::TERRAN_MISSILETURRET,
+								  UNIT_TYPEID::TERRAN_SENSORTOWER,   UNIT_TYPEID::TERRAN_PLANETARYFORTRESS, UNIT_TYPEID::TERRAN_REFINERY, 
+								  UNIT_TYPEID::TERRAN_SUPPLYDEPOT, UNIT_TYPEID::TERRAN_BARRACKS, UNIT_TYPEID::TERRAN_BUNKER, 
+								  UNIT_TYPEID::TERRAN_GHOSTACADEMY, UNIT_TYPEID::TERRAN_FACTORY, UNIT_TYPEID::TERRAN_ORBITALCOMMAND, 
+								  UNIT_TYPEID::TERRAN_ARMORY, UNIT_TYPEID::TERRAN_STARPORT, UNIT_TYPEID::TERRAN_FUSIONCORE};
+	for (const auto& ID : tempBuildingIDs) {
+		building_IDs.insert(ID);
+	}
 }
 
 // Generic methods for attempting to build any structure
@@ -367,10 +374,17 @@ void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
 }
 
 void ProductionManager::OnIdleBarracks(const Unit* unit) {
-	/*if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
-	Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
-	}*/
-	actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
+	if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER) * 3) {
+		std::cout << "Trying to build a Reaper" << std::endl;
+		actions->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
+	}
+	else if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER) * 3) {
+		std::cout << "Trying to build a Marauder" << std::endl;
+		actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARAUDER);
+	}
+	else {
+		actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
+	}
 }
 
 // Build utility methods
@@ -400,4 +414,53 @@ const Unit* ProductionManager::GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYP
 	}
 
 	return unit_to_build;
+}
+
+
+
+void ProductionManager::TryRepairBuildings() {
+	Units units = observation->GetUnits(Unit::Alliance::Self);
+	
+	for (const auto& unit : units) {
+		if (unit->health < unit->health_max && unit->build_progress == 1.0) {
+			//std::cout << "Someone is hurt!" << std::endl;
+			//find nearest unit that can repair
+			if (IsBuilding(unit)) {
+				Units repairers = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_SCV));
+				//find closest SCV
+				const Unit* closestRepairer = repairers[0];
+				for (const auto& repairer : repairers) {
+					//check distance between units
+					if (Distance3D(closestRepairer->pos, unit->pos) > Distance3D(repairer->pos, unit->pos) ) {
+						bool already_repairing = false;
+						for (const auto& order : unit->orders)
+						{
+							if (order.ability_id == ABILITY_ID::EFFECT_REPAIR_SCV)
+							{
+								already_repairing = true;
+								break;
+							}
+						}
+						if (!already_repairing) {
+							closestRepairer = repairer;
+						}
+						
+						
+					}
+				
+				}
+
+				actions->UnitCommand(closestRepairer, ABILITY_ID::EFFECT_REPAIR_SCV, unit);
+
+			}
+			
+		}
+	}
+
+
+}
+
+bool ProductionManager::IsBuilding(const Unit* unit) {
+	auto it = building_IDs.find(unit->unit_type);
+	return (it != building_IDs.end());
 }

@@ -13,7 +13,7 @@ public:
 	void OnIdleMarine(const Unit* unit);
 	void OnIdleReaper(const Unit* unit);
 
-	void checkForEnemyBase();
+	void CheckForEnemyBase();
 private:
 
 	Point2D enemyStartLocation;
