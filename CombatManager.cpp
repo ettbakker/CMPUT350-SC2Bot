@@ -33,11 +33,13 @@ bool CombatManager::AttackEnemy() {
 		//Send all units to the enemy
 		Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
 		Units sending = observation->GetUnits(Unit::Alliance::Self, filter);
+		filter = IsUnit(UNIT_TYPEID::TERRAN_REAPER);
+		Units moreSending = observation->GetUnits(Unit::Alliance::Self, filter);
 		for (auto s : sending) {
 			actions->UnitCommand(s, ABILITY_ID::ATTACK_ATTACK, target);
 		}
-		filter = IsUnit(UNIT_TYPEID::TERRAN_REAPER);
-		Units moreSending = observation->GetUnits(Unit::Alliance::Self, filter);
+		//Actions()->UnitCommand(sending, ABILITY_ID::ATTACK_ATTACK, target);
+		
 		for (auto s : moreSending) {
 			actions->UnitCommand(s, ABILITY_ID::ATTACK_ATTACK, target);
 		}
@@ -62,6 +64,7 @@ void CombatManager::OnIdleMarine(const Unit* unit) {
 	if ((numberIdleMarines % 30) == 0) {
 		randomMarineLocation = rand() % game_info.enemy_start_locations.size();
 		newPoint = game_info.enemy_start_locations[randomMarineLocation];
+		numberIdleMarines = 0;
 	}//Send others close to base
 	else {
 		newPoint = Point2D(newPoint.x + rx * 5.0f, newPoint.y + ry * 5.0f);

@@ -117,23 +117,27 @@ bool BasicSc2Bot::AddBase(const Unit* unit) {
 			++j;
 			rx = GetRandomScalar();
 			ry = GetRandomScalar();
-			potentialLocation = Point2D(bases[0]->origin.x + rx * 42.0f, bases[0]->origin.y + ry * 42.0f);
+			potentialLocation = Point2D(bases[0]->origin.x + rx * 80.0f, bases[0]->origin.y + ry * 80.0f);
 			suitable = true;
 			//Check that its not too close to another base
-			if (bases.size() >=2) {
-				for (int l = 1; l < bases.size(); l++) {
-					if (Distance2D(potentialLocation, bases[l]->origin) < 30) {
-						suitable = false;
-						break;
-					}
+			//if (bases.size() >=2) {
+			//}
+			rx = GetRandomScalar();
+			ry = GetRandomScalar();
+			const Unit* vespen = prodMngr->GetNearestUnit(potentialLocation, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER);
+			potentialLocation = Point2D(vespen->pos.x + rx * 7.0f, vespen->pos.y + ry * 7.0f);
+
+			for (int l = 0; l < bases.size(); ++l) {
+				float distanceBase = Distance2D(potentialLocation, bases[l]->origin);
+				if (distanceBase < 35.0f && distanceBase > 45.f && Query()->Placement(ABILITY_ID::BUILD_COMMANDCENTER, potentialLocation)) {
+					suitable = false;
+					break;
 				}
 			}
 			
 			//Check that its not near the edges of the map and somewhat further from the main base
-			if ((DistanceSquared2D(potentialLocation, bases[0]->origin) > 450) 
-				&& (potentialLocation.x > 20) && (potentialLocation.y > 20) 
-				&& (potentialLocation.x < 145) && (potentialLocation.y < 145)
-				&& suitable) {
+			if (suitable && (potentialLocation.x > 20) && (potentialLocation.y > 20)
+				&& (potentialLocation.x < 145) && (potentialLocation.y < 145)) {
 				Actions()->UnitCommand(unit, ABILITY_ID::BUILD_COMMANDCENTER, potentialLocation);
 				//prodMngr->TryBuildCommandCenter(50.0);
 				bases.push_back(new Base(potentialLocation));
