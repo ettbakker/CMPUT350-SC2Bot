@@ -101,6 +101,9 @@ bool ProductionManager::CanBuildSupplyDepot() {
 		return false;
 	}
 
+	if (observation->GetFoodCap() > (bases.size() * 60)) {
+		return false;
+	}
 	return true;
 }
 
@@ -112,17 +115,22 @@ bool ProductionManager::CanBuildCommandCenter() {
 	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point) >= 3) {
 		return false;
 	}
+	if (bases.size() > 4) {
+		return false;
+	}
 	return true;
 }
 
 bool ProductionManager::CanBuildBarracks() {
-	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 2)
-	{
+	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 2) {
 		return false;
 	}
 
-	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 4)
-	{
+	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 4) {
+		return false;
+	}
+
+	if (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > (bases.size() * 3)) {
 		return false;
 	}
 	return true;
@@ -137,6 +145,11 @@ bool ProductionManager::CanBuildEngineeringBay() {
 	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < 1) {
 		return false;
 	}
+	
+	if (CountUnitType(UNIT_TYPEID::TERRAN_ENGINEERINGBAY) > 2) {
+		return false;
+	}
+
 	return true;
 }
 
@@ -408,13 +421,12 @@ void ProductionManager::OnIdleSCV(const Unit* unit) {
 		actions->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
 
 	}
-	
 }
 
 void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
 
 	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 2 
-		&& CountUnitType(UNIT_TYPEID::TERRAN_ORBITALCOMMAND) < 3) {
+		&& CountUnitType(UNIT_TYPEID::TERRAN_ORBITALCOMMAND) < 2) {
 		actions->UnitCommand(unit, ABILITY_ID::MORPH_ORBITALCOMMAND);
 	}
 	//actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
