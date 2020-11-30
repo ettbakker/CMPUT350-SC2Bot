@@ -7,21 +7,30 @@ ProductionManager::ProductionManager()
 
 void ProductionManager::BuildStructures() {
 
+	int count = 0;
 	for (auto base : bases) {
-		
 		building_point = base->origin;
 		//If we can find a command center at the base
 		//if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 50) >=1) {
 			//There is a command center at the start location or near it then we can build buildings around that command center.
 			//Allows us to have multiple bases with their own economies
-			TryBuildCommandCenter(30.0);
-			TryBuildSupplyDepot();
+		
+		//Check if no command center is near by. If there is none, try to build the command center first before anything else
+		//std::cout << "Base: " << count << ", " << CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 32.5) << std::endl;
+		if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 25) == 0) {
+				TryBuildCommandCenter(10.0);
+				continue;
+		}
+		else {
+			TryBuildSupplyDepot(20);
 			TryBuildRefinery();
-			//TryBuildBarracks();
+			TryBuildBarracks(20);
 			//TryBuildEngineeringBay();
 			//TryBuildFactory();
 			//TryBuildArmory();
 			//TryBuildTurrets(40.0);
+		}
+		++count;
 		/*}
 		else {
 			//Build a command center at the base location before we build anything else
@@ -112,7 +121,7 @@ bool ProductionManager::CanBuildCommandCenter() {
 	{
 		return false;
 	}*/
-	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) >= 3) {
+	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) > 2) {
 		return false;
 	}
 	if (bases.size() > 4) {
@@ -434,11 +443,12 @@ void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
 	}
 	//actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
 
-	if (unit->assigned_harvesters < unit->ideal_harvesters) {
-		if (CountUnitType(UNIT_TYPEID::TERRAN_SCV) < 30 * bases.size()) {
+	//if (unit->assigned_harvesters <= unit->ideal_harvesters) {
+		if (CountUnitType(UNIT_TYPEID::TERRAN_SCV) <= (16 * CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER))) {
 			actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
+			return;
 		}
-	}
+	//}
 }
 
 void ProductionManager::OnIdleBarracks(const Unit* unit) {
@@ -447,9 +457,11 @@ void ProductionManager::OnIdleBarracks(const Unit* unit) {
 	}*/
 	if (unit->add_on_tag == 0)
 	{
-		TryBuildAddOn(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
+		if (observation->GetArmyCount() > 20) {
+			//TryBuildAddOn(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
+		}
 	}
-	if (observation->GetArmyCount() > 50) {
+	if (observation->GetArmyCount() > (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) * 20)) {
 		return;
 	}
 	actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
