@@ -13,6 +13,7 @@ public:
 
 	void OnIdleMarine(const Unit* unit);
 	void OnIdleReaper(const Unit* unit);
+	void OnIdleMaarauder(const Unit* unit);
 
 	void CheckForEnemyBase();
 

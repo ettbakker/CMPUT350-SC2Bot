@@ -82,6 +82,10 @@ void CombatManager::OnIdleReaper(const Unit* unit) {
 
 }
 
+void CombatManager::OnIdleMaarauder(const Unit* unit)
+{
+}
+
 void CombatManager::CheckForEnemyBase()
 {	
 	Point2D testPoint;
