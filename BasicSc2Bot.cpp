@@ -98,7 +98,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 //Very strange balance with the numbers needed to get it to build more than 2 bases
 //Adding a 3rd base right now works only sometimes, since I'm trying not to build bases too close together.
 bool BasicSc2Bot::AddBase(const Unit* unit) {
-	if ((bases.size() < 3) && (thirdBaseAttempt<20)) {
+	if ((bases.size() < 2) && (thirdBaseAttempt<20)) {
 		int j = 0;
 		Point2D potentialLocation;
 		float rx;

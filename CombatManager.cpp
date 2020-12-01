@@ -25,26 +25,22 @@ bool CombatManager::AttackEnemy() {
 		}
 	}
 
-	if (observation->GetArmyCount() > 40) {
+	if (observation->GetArmyCount() > 50) {
 		attack = true;
 	}
 
 	if (attack) {
 		//Send all units to the enemy
 		Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
-		Units sending = observation->GetUnits(Unit::Alliance::Self, filter);
+		Units marines = observation->GetUnits(Unit::Alliance::Self, filter);
 		filter = IsUnit(UNIT_TYPEID::TERRAN_REAPER);
-		Units moreSending = observation->GetUnits(Unit::Alliance::Self, filter);
-		for (auto s : sending) {
-			actions->UnitCommand(s, ABILITY_ID::ATTACK_ATTACK, target);
+		Units reapers = observation->GetUnits(Unit::Alliance::Self, filter);
+		if (target != nullptr) {
+			actions->UnitCommand(marines, ABILITY_ID::ATTACK_ATTACK, target, true);
 		}
-		//Actions()->UnitCommand(sending, ABILITY_ID::ATTACK_ATTACK, target);
-		
-		for (auto s : moreSending) {
-			actions->UnitCommand(s, ABILITY_ID::ATTACK_ATTACK, target);
+		if (target != nullptr) {
+			actions->UnitCommand(reapers, ABILITY_ID::ATTACK_ATTACK, target, true);
 		}
-		//Actions()->UnitCommand(moreSending, ABILITY_ID::ATTACK_ATTACK, target);
-
 		//Reset idle marine count
 		numberIdleMarines = 0;
 
