@@ -8,20 +8,27 @@ ProductionManager::ProductionManager()
 void ProductionManager::BuildStructures() {
 
 	for (auto base : bases) {
-		
 		building_point = base->origin;
 		//If we can find a command center at the base
 		//if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 50) >=1) {
 			//There is a command center at the start location or near it then we can build buildings around that command center.
 			//Allows us to have multiple bases with their own economies
-			TryBuildCommandCenter(30.0);
-			TryBuildSupplyDepot();
+		
+		//Check if no command center is near by. If there is none, try to build the command center first before anything else
+		if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 25) == 0) {
+				TryBuildCommandCenter(10.0);
+				continue;
+		}
+		else {
+			TryBuildSupplyDepot(20);
 			TryBuildRefinery();
-			TryBuildBarracks();
-			TryBuildEngineeringBay();
-			TryBuildFactory();
-			TryBuildArmory();
-			TryBuildTurrets(40.0);
+			TryBuildBarracks(20);
+			//TryBuildEngineeringBay();
+			//TryBuildFactory();
+			//TryBuildArmory();
+			//TryBuildTurrets(40.0);
+		}
+    
 		/*}
 		else {
 			//Build a command center at the base location before we build anything else
@@ -86,7 +93,7 @@ bool ProductionManager::TryBuildStructureInBase(ABILITY_ID build_ability, const 
 // Methods for verifying whether a certain structure can be built
 
 bool ProductionManager::CanBuildRefinery() {
-	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 100) >= 2*bases.size()) {
+	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 100) >= 2*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
 		return false;
 	}
 	return true;
@@ -101,6 +108,9 @@ bool ProductionManager::CanBuildSupplyDepot() {
 		return false;
 	}
 
+	if (observation->GetFoodCap() > (bases.size() * 60)) {
+		return false;
+	}
 	return true;
 }
 
@@ -109,20 +119,25 @@ bool ProductionManager::CanBuildCommandCenter() {
 	{
 		return false;
 	}*/
-	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point) >= 3) {
+	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) > 2) {
+		return false;
+	}
+	if (bases.size() > 4) {
 		return false;
 	}
 	return true;
 }
 
 bool ProductionManager::CanBuildBarracks() {
-	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 2)
-	{
+	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 2) {
 		return false;
 	}
 
-	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 4)
-	{
+	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 4) {
+		return false;
+	}
+
+	if (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > (bases.size() * 3)) {
 		return false;
 	}
 	return true;
@@ -137,6 +152,11 @@ bool ProductionManager::CanBuildEngineeringBay() {
 	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < 1) {
 		return false;
 	}
+	
+	if (CountUnitType(UNIT_TYPEID::TERRAN_ENGINEERINGBAY) > 2) {
+		return false;
+	}
+
 	return true;
 }
 
@@ -203,6 +223,9 @@ bool ProductionManager::TryBuildRefinery(const Unit* target_geyser) {
 	//Need to find position of vespene gas
 	if (target_geyser == nullptr) {
 		target_geyser = GetBestNearestUnit(building_point, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER);
+		//std::cout << "x= " << target_geyser->pos.x << " ,y= " << target_geyser->pos.y << std::endl;
+		//float distance = sqrtf(pow(building_point.x - target_geyser->pos.x, 2) + pow(building_point.y - target_geyser->pos.y, 2));
+		//std::cout << distance << std::endl;
 	}
 	if (!target_geyser) {
 		return false;
@@ -408,22 +431,22 @@ void ProductionManager::OnIdleSCV(const Unit* unit) {
 		actions->UnitCommand(unit, ABILITY_ID::SMART, mineral_target);
 
 	}
-	
 }
 
 void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
 
 	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 2 
-		&& CountUnitType(UNIT_TYPEID::TERRAN_ORBITALCOMMAND) < 3) {
-		actions->UnitCommand(unit, ABILITY_ID::MORPH_ORBITALCOMMAND);
+		&& CountUnitType(UNIT_TYPEID::TERRAN_ORBITALCOMMAND) < 2) {
+		//actions->UnitCommand(unit, ABILITY_ID::MORPH_ORBITALCOMMAND);
 	}
 	//actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
 
-	if (unit->assigned_harvesters < unit->ideal_harvesters) {
-		if (CountUnitType(UNIT_TYPEID::TERRAN_SCV) < 30 * bases.size()) {
+	//if (unit->assigned_harvesters <= unit->ideal_harvesters) {
+		if (CountUnitType(UNIT_TYPEID::TERRAN_SCV) <= (16 * CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER))) {
 			actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
+			return;
 		}
-	}
+	//}
 }
 
 void ProductionManager::OnIdleBarracks(const Unit* unit) {
@@ -432,7 +455,12 @@ void ProductionManager::OnIdleBarracks(const Unit* unit) {
 	}*/
 	if (unit->add_on_tag == 0)
 	{
-		TryBuildAddOn(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
+		if (observation->GetArmyCount() > 20) {
+			//TryBuildAddOn(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
+		}
+	}
+	if (observation->GetArmyCount() > (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) * 20)) {
+		return;
 	}
 	actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
 }
