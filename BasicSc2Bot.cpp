@@ -84,10 +84,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 
 		case UNIT_TYPEID::TERRAN_MULE:
 		{
-			if (!AddBase(unit)) {
-				prodMngr->OnIdleSCV(unit);
-			}
-			break;
+			prodMngr->OnIdleSCV(unit); break;
 		}
 
 		default:
@@ -106,6 +103,8 @@ bool BasicSc2Bot::AddBase(const Unit* unit) {
 		Point2D potentialLocation;
 		float rx;
 		float ry;
+		float distanceX, distanceY;
+		float minV, maxV;
 		bool suitable;
 		//Keep track of how many times we try to add a third base so we don't do this forever
 		//Sometimes it can't find a location
@@ -117,26 +116,46 @@ bool BasicSc2Bot::AddBase(const Unit* unit) {
 			++j;
 			rx = GetRandomScalar();
 			ry = GetRandomScalar();
-			potentialLocation = Point2D(bases[0]->origin.x + rx * 42.0f, bases[0]->origin.y + ry * 42.0f);
+			potentialLocation = Point2D(bases[0]->origin.x + rx * 80.0f, bases[0]->origin.y + ry * 80.0f);
 			suitable = true;
 			//Check that its not too close to another base
-			if (bases.size() >=2) {
-				for (int l = 1; l < bases.size(); l++) {
-					if (Distance2D(potentialLocation, bases[l]->origin) < 30) {
-						suitable = false;
-						break;
-					}
+			//if (bases.size() >=2) {
+			//}
+			rx = GetRandomFraction();
+			ry = GetRandomFraction();
+
+			//Check between two geysers for a location
+			const Unit* vespen = prodMngr->GetNearestUnit(potentialLocation, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER);
+			const Unit* vespen2 = prodMngr->GetNearestUnit(vespen->pos, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER);
+			distanceX = abs(vespen2->pos.x - vespen->pos.x);
+			distanceY = abs(vespen2->pos.y - vespen->pos.y);
+			if (distanceX > distanceY) {
+				minV = fminf(vespen->pos.x, vespen2->pos.x);
+				potentialLocation = Point2D(minV + rx * distanceX, vespen->pos.y + ry * 7.0f);
+			}
+			else {
+				minV = fminf(vespen->pos.y, vespen2->pos.y);
+				potentialLocation = Point2D(vespen->pos.x + rx * 7.0f, minV + ry * distanceY);
+			}
+
+			//Check is the location is too close to other bases
+			for (int l = 0; l < bases.size(); ++l) {
+				float distanceBase = Distance2D(potentialLocation, bases[l]->origin);
+				//std::cout << "Distance from base check: " << distanceBase << std::endl;
+				if (distanceBase < 15.0f || distanceBase > 50.0f || Query()->Placement(ABILITY_ID::BUILD_COMMANDCENTER, potentialLocation)) {
+					suitable = false;
+					break;
 				}
 			}
+
 			
 			//Check that its not near the edges of the map and somewhat further from the main base
-			if ((DistanceSquared2D(potentialLocation, bases[0]->origin) > 450) 
-				&& (potentialLocation.x > 20) && (potentialLocation.y > 20) 
-				&& (potentialLocation.x < 145) && (potentialLocation.y < 145)
-				&& suitable) {
+			if (suitable && (potentialLocation.x > 20) && (potentialLocation.y > 20)
+				&& (potentialLocation.x < 145) && (potentialLocation.y < 145)) {
 				Actions()->UnitCommand(unit, ABILITY_ID::BUILD_COMMANDCENTER, potentialLocation);
 				//prodMngr->TryBuildCommandCenter(50.0);
 				bases.push_back(new Base(potentialLocation));
+				float distanceBase = Distance2D(potentialLocation, bases[0]->origin);
 				std::cout << "Added a new base " << "X: " << potentialLocation.x << " Y: " << potentialLocation.y << std::endl;
 				return true;
 			}
