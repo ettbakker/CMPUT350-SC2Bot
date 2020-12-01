@@ -7,7 +7,6 @@ ProductionManager::ProductionManager()
 
 void ProductionManager::BuildStructures() {
 
-	int count = 0;
 	for (auto base : bases) {
 		building_point = base->origin;
 		//If we can find a command center at the base
@@ -16,7 +15,6 @@ void ProductionManager::BuildStructures() {
 			//Allows us to have multiple bases with their own economies
 		
 		//Check if no command center is near by. If there is none, try to build the command center first before anything else
-		//std::cout << "Base: " << count << ", " << CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 32.5) << std::endl;
 		if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 25) == 0) {
 				TryBuildCommandCenter(10.0);
 				continue;
@@ -30,7 +28,7 @@ void ProductionManager::BuildStructures() {
 			//TryBuildArmory();
 			//TryBuildTurrets(40.0);
 		}
-		++count;
+    
 		/*}
 		else {
 			//Build a command center at the base location before we build anything else
