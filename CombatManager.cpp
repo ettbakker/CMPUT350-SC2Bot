@@ -25,7 +25,7 @@ bool CombatManager::AttackEnemy() {
 		}
 	}
 
-	if (observation->GetArmyCount() > 100) {
+	if (observation->GetArmyCount() > 50) {
 		attack = true;
 	}
 
@@ -35,87 +35,13 @@ bool CombatManager::AttackEnemy() {
 		Units marines = observation->GetUnits(Unit::Alliance::Self, filter);
 		filter = IsUnit(UNIT_TYPEID::TERRAN_REAPER);
 		Units reapers = observation->GetUnits(Unit::Alliance::Self, filter);
-		//bool stillMarines = true, stillReapers = false;
-		//auto mit = marines.begin();
-		//auto rit = reapers.begin();
-		//Loop through large vecotor and give small vectors a command until there are no
-		//more units to add to small vectors.
-		//while (stillMarines || stillReapers) {
-			//Units *tempMarines;
-			/*if (marines.end() - mit > 9) {
-				
-				//Units tempMarines(mit, mit + 9);
-				Units tempMarines;
-				std::cout << "Send attempt" << std::endl;
-				for (int i = 0; i < 9; i++) {
-					tempMarines.push_back(*mit);
-					++mit;
-				}
-				std::cout << tempMarines.size() << std::endl;
-				actions->UnitCommand(tempMarines, ABILITY_ID::ATTACK_ATTACK, target);
-				std::cout << "Send 10" << std::endl;
-				//mit += 9;
-			}
-			else if( mit < marines.end()){
-				
-				//Units tempMarines(mit, marines.end());
-				Units tempMarines;
-				for (; mit < marines.end(); ++mit) {
-					tempMarines.push_back(*mit);
-				}
-				std::cout << "Send left overs " << marines.size() << " " << tempMarines.size() << std::endl;
-				actions->UnitCommand(marines, ABILITY_ID::ATTACK_ATTACK, target);
-				stillMarines = false;
-				///mit = marines.end();
-			}
-			else {
-				std::cout << "none left" << std::endl;
-				stillMarines = false;
-			}*/
-			//stillMarines = false;
-			//stillReapers = false;
-			/*//Units* tempReapers;
-			if (reapers.end() -rit >= 10) {
-				Units tempReapers(rit, rit + 9);
-				rit += 10;
-				actions->UnitCommand(tempReapers, ABILITY_ID::ATTACK_ATTACK, target);
-			}
-			else if (rit < reapers.end()){
-				Units tempReapers(rit, reapers.end());
-				stillReapers = false;
-				actions->UnitCommand(tempReapers, ABILITY_ID::ATTACK_ATTACK, target);
-				rit = reapers.end();
-			}
-			else {
-				stillReapers = false;
-			}*/
-			
-			
-		//}
 		if (target != nullptr) {
 			actions->UnitCommand(marines, ABILITY_ID::ATTACK_ATTACK, target, true);
 		}
 		if (target != nullptr) {
 			actions->UnitCommand(reapers, ABILITY_ID::ATTACK_ATTACK, target, true);
 		}
-		
-		/*
-		//Send all units to the enemy
-		Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
-		Units sending = observation->GetUnits(Unit::Alliance::Self, filter);
-		filter = IsUnit(UNIT_TYPEID::TERRAN_REAPER);
-		Units moreSending = observation->GetUnits(Unit::Alliance::Self, filter);
-		for (auto s : sending) {
-			actions->UnitCommand(s, ABILITY_ID::ATTACK_ATTACK, target);
-		}
-		//Actions()->UnitCommand(sending, ABILITY_ID::ATTACK_ATTACK, target);
-		
-		for (auto s : moreSending) {
-			actions->UnitCommand(s, ABILITY_ID::ATTACK_ATTACK, target);
-		}
-		//Actions()->UnitCommand(moreSending, ABILITY_ID::ATTACK_ATTACK, target);
-
-		//Reset idle marine count*/
+		//Reset idle marine count
 		numberIdleMarines = 0;
 
 	}
