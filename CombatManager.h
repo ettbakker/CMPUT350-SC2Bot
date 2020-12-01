@@ -11,9 +11,10 @@ class CombatManager : public Manager {
 public:
 	CombatManager();
 
+	bool AttackEnemy();
 	void OnIdleMarine(const Unit* unit);
 	void OnIdleReaper(const Unit* unit);
-	bool AttackEnemy();
+	
 private:
 	size_t numberIdleMarines = 0;
 };

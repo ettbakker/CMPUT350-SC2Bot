@@ -60,14 +60,14 @@ void CombatManager::OnIdleMarine(const Unit* unit) {
 	if ((numberIdleMarines % 30) == 0) {
 		randomMarineLocation = rand() % game_info.enemy_start_locations.size();
 		newPoint = game_info.enemy_start_locations[randomMarineLocation];
-		numberIdleMarines = 0;
+		numberIdleMarines = 1;
 	}//Send others close to base
 	else {
 		newPoint = Point2D(newPoint.x + rx * 5.0f, newPoint.y + ry * 5.0f);
 	}
 	//Only send marines out if we have a small army
-	if (numberMarines > 30) {
-		Actions()->UnitCommand(unit, ABILITY_ID::ATTACK_ATTACK, newPoint);
+	if (numberMarines > 40) {
+		actions->UnitCommand(unit, ABILITY_ID::ATTACK_ATTACK, newPoint);
 	}
 	numberIdleMarines += 1;
 }
