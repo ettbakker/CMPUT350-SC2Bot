@@ -427,13 +427,14 @@ void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
 }
 
 void ProductionManager::OnIdleBarracks(const Unit* unit) {
-	/*if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
-	Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
-	}*/
+	
 	if (unit->add_on_tag == 0)
 	{
 		TryBuildAddOn(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
 	}
+/*if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
+	Actions()->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER);
+	}*/
 	actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE);
 }
 

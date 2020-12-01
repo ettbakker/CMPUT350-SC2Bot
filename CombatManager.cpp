@@ -25,11 +25,60 @@ bool CombatManager::AttackEnemy() {
 		}
 	}
 
-	if (observation->GetArmyCount() > 40) {
+	if (observation->GetArmyCount() > 10) {
 		attack = true;
 	}
 
 	if (attack) {
+		//Send all units to the enemy
+		Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
+		Units marines = observation->GetUnits(Unit::Alliance::Self, filter);
+		filter = IsUnit(UNIT_TYPEID::TERRAN_REAPER);
+		Units reapers = observation->GetUnits(Unit::Alliance::Self, filter);
+		bool stillMarines = true, stillReapers = true;
+		auto mit = marines.begin();
+		auto rit = reapers.begin();
+		//Loop through large vecotor and give small vectors a command until there are no
+		//more units to add to small vectors.
+		while (stillMarines || stillReapers) {
+			//Units *tempMarines;
+			if (marines.end() - mit > 30) {
+				std::cout << "Send 30" << std::endl;
+				Units tempMarines(mit, mit + 30);
+				actions->UnitCommand(tempMarines, ABILITY_ID::ATTACK_ATTACK, attack);
+				mit += 30;
+			}
+			else if( mit < marines.end()){
+				std::cout << "Send left overs" << std::endl;
+				Units tempMarines(mit, marines.end()-1);
+				actions->UnitCommand(tempMarines, ABILITY_ID::ATTACK_ATTACK, attack);
+				stillMarines = false;
+				mit = marines.end();
+			}
+			else {
+				std::cout << "none left" << std::endl;
+				stillMarines = false;
+			}
+			//Units* tempReapers;
+			if (reapers.end() -rit > 30) {
+				Units tempReapers(rit, rit + 30);
+				rit += 30;
+				actions->UnitCommand(tempReapers, ABILITY_ID::ATTACK_ATTACK, target);
+			}
+			else if (rit < reapers.end()){
+				Units tempReapers(rit, reapers.end()-1);
+				stillReapers = false;
+				actions->UnitCommand(tempReapers, ABILITY_ID::ATTACK_ATTACK, target);
+				rit = reapers.end();
+			}
+			else {
+				stillReapers = false;
+			}
+			
+			
+		}
+
+		/*
 		//Send all units to the enemy
 		Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
 		Units sending = observation->GetUnits(Unit::Alliance::Self, filter);
@@ -46,7 +95,7 @@ bool CombatManager::AttackEnemy() {
 		//Actions()->UnitCommand(moreSending, ABILITY_ID::ATTACK_ATTACK, target);
 
 		//Reset idle marine count
-		numberIdleMarines = 0;
+		numberIdleMarines = 0;*/
 
 	}
 
