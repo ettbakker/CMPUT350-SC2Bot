@@ -1,0 +1,49 @@
+5 runs per parameter set
+	Difficulty: Easy, Medium
+	Race: Terran, Zerg, Protoss
+	Map: CactusValley, BelShirVestige, ProximaStation
+	
+2 * 3 * 3 = 18 paramater sets, 5 runs each, 90 runs, 4 people, 22 runs per person
+
+D = Difficulty
+R = Race
+M = Map
+
+Seth:
+D:Easy, R:Terran, M:CactusValleyLE
+D:Easy, R:Terran, M:BelShirVestigeLE
+D:Easy, R:Terran, M:ProximaStationLE
+D:Easy, R:Zerg, M:CactusValleyLE
+
+Daniel:
+D:Easy, R:Zerg, M:BelShirVestigeLE
+D:Easy, R:Zerg, M:ProximaStationLE
+D:Easy, R:Protoss, M:CactusValleyLE
+D:Easy, R:Protoss, M:BelShirVestigeLE
+
+Jacob:
+D:Easy, R:Protoss, M:ProximaStationLE	RESULTS: #/5 CCCCC
+D:Medium, R:Terran, M:CactusValleyLE	RESULTS: #/5 LLLLL
+D:Medium, R:Terran, M:BelShirVestigeLE	RESULTS: #/5 LLLLL
+D:Medium, R:Terran, M:ProximaStationLE	RESULTS: #/5 CCCCC
+D:Medium, R:Zerg, M:CactusValleyLE		RESULTS: #/5 LLLLL
+
+Jandaile:
+D:Medium, R:Zerg, M:BelShirVestigeLE
+D:Medium, R:Zerg, M:ProximaStationLE
+D:Medium, R:Protoss, M:CactusValleyLE
+D:Medium, R:Protoss, M:BelShirVestigeLE
+D:Medium, R:Protoss, M:ProximaStationLE
+
+
+CLASS AVERAGE: 87.39% (B+)
+	Assignments: 98.45% [ 30% ]
+	Midterm: 78.16% [ 20% ]
+	Participation: 62.6% Quiz [ 5% ]
+					83% Slido [ 5% ]
+					TOTAL: 73% [ 10% ]
+MY CACL CLASS AVG: 87.445
+MY AVG: 87.445 - 1.3 - 0.315 - 1.632 = 84.198
+
+
+	
