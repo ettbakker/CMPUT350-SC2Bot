@@ -15,11 +15,12 @@ public:
 	const Unit* GetBestNearestUnit(const Point2D& point, UNIT_TYPEID unit_type, Unit::Alliance alliance = Unit::Alliance::Neutral);
 	Point2D GetStartPoint();
 	Point2D GetRandomNearbyPoint(Point2D start_point, float distance = 5.0f);
-	void SetObservationAndActions(const ObservationInterface* obs, ActionInterface* act, Bases& b);
+	void SetObservationAndActions(const ObservationInterface* obs, ActionInterface* act, Bases& b, std::vector<Point3D> expLocations);
 	
 	const ObservationInterface* observation;
 	ActionInterface* actions;
 	Bases bases;
 	Point2D building_point;
+	std::vector<Point3D> expansionLocations;
 	
 };

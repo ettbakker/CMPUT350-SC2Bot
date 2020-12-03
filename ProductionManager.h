@@ -79,6 +79,7 @@ public:
 	void OnIdleSCV(const Unit* unit);
 	void OnIdleCommandCenter(const Unit* unit);
 	void OnIdleBarracks(const Unit* unit);
+	void OnIdleFactory(const Unit* unit);
 	void OnIdleEngineeringBay(const Unit* unit);
 	void OnIdleArmory(const Unit* unit);
 	void OnIdleOrbitalCommand(const Unit* unit);

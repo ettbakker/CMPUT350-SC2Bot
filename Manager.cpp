@@ -101,9 +101,10 @@ Point2D Manager::GetRandomNearbyPoint(Point2D start_point, float distance)
 	return Point2D(start_point.x + rx * distance, start_point.y + ry * distance);
 }
 
-void Manager::SetObservationAndActions(const ObservationInterface* obs, ActionInterface* act, Bases& b) {
+void Manager::SetObservationAndActions(const ObservationInterface* obs, ActionInterface* act, Bases& b, std::vector<Point3D> expLocations) {
 	observation = obs;
 	actions = act;
 	bases = b;
 	building_point = GetStartPoint();
+	expansionLocations = expLocations;
 }
