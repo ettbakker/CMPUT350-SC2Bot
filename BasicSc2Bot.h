@@ -10,6 +10,7 @@
 #include "Manager.h"
 #include "ProductionManager.h"
 #include "CombatManager.h"
+#include "EconomyManager.h"
 #include <iostream>
 #include <algorithm>
 

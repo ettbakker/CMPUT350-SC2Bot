@@ -44,25 +44,28 @@ void ProductionManager::BuildStructures() {
 // Generic methods for attempting to build any structure
 
 bool ProductionManager::TryBuildStructureNearPoint(ABILITY_ID build_ability, Point2D point, float build_radius, const Unit* builder_unit) {
-	Point2D near_point(point.x + (GetRandomScalar() * build_radius),
-		point.y + (GetRandomScalar() * build_radius));
+	Point2D near_point;
+	bool is_valid_point = false;
+
 	for (size_t i = 0; i < 20; ++i) {
+		near_point = GetRandomNearbyPoint(building_point, build_radius);
 		if (observation->IsPlacable(near_point)) {
+			is_valid_point = true;
 			break;
-		}
-		else {
-			near_point = Point2D(point.x + (GetRandomScalar() * build_radius),
-				point.y + (GetRandomScalar() * build_radius));
 		}
 	}
 	
-	if (builder_unit == nullptr) {
-		builder_unit = GetBuilderUnit(build_ability);
+	if (!is_valid_point) {
+		return false;
 	}
 
 	if (builder_unit == nullptr) {
-		return false;
+		builder_unit = GetBuilderUnit(build_ability);
+		if (builder_unit == nullptr) {
+			return false;
+		}
 	}
+
 	actions->UnitCommand(builder_unit, build_ability, near_point);
 	return true;
 }

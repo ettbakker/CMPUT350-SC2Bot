@@ -13,21 +13,19 @@
 
 using namespace sc2;
 
+enum COST { MINERALS = 0, GAS = 1, SUPPLY = 2 };
+
+typedef std::tuple<size_t, size_t, size_t> UnitCostTuple;
+typedef std::tuple<size_t, size_t> BuildingCostTuple;
+typedef std::tuple<size_t, size_t> UpgradeCostTuple;
 
 class TerranUnitCosts {
-	enum UNIT_COST { MINERALS=0, GAS=1, SUPPLY=2 };
-	enum BUILDING_COST { MINERALS=0, GAS=1 };
-	enum UPGRADE_COST { MINERALS=0, GAS=1 };
-
-	typedef std::tuple<size_t, size_t, size_t> UnitCostTuple;
-	typedef std::tuple<size_t, size_t> BuildingCostTuple;
-	typedef std::tuple<size_t, size_t> UpgradeCostTuple;
-
+public:
 	typedef std::unordered_map<UNIT_TYPEID, UnitCostTuple> UnitCostMap;
 	typedef std::unordered_map<UNIT_TYPEID, BuildingCostTuple> BuildingCostMap;
 	typedef std::unordered_map<UPGRADE_ID, UpgradeCostTuple> UpgradeCostMap;
 
-	static const BuildingCostMap TERRAN_BUILDINGS() {
+	static const BuildingCostMap BUILDINGS() {
 		return { { UNIT_TYPEID::TERRAN_COMMANDCENTER, {400, 0} },
 			{ UNIT_TYPEID::TERRAN_SUPPLYDEPOT, {100, 0} },
 			{ UNIT_TYPEID::TERRAN_BARRACKS, {150, 0} },
@@ -53,30 +51,19 @@ class TerranUnitCosts {
 		};
 	}
 
-	static const UnitCostMap COMMANDCENTER_UNITS() {
-		return { { UNIT_TYPEID::TERRAN_SCV, {50, 0, 1} } };
-	}
-
-	static const UnitCostMap BARRACKS_UNITS() {
-		return { { UNIT_TYPEID::TERRAN_MARINE, {50, 0, 1} },
+	static const UnitCostMap UNITS() {
+		return { { UNIT_TYPEID::TERRAN_SCV, {50, 0, 1} },
+			{ UNIT_TYPEID::TERRAN_MARINE, {50, 0, 1} },
 			{ UNIT_TYPEID::TERRAN_MARAUDER, {100, 25, 2} },
 			{ UNIT_TYPEID::TERRAN_REAPER, {50, 50, 1} },
-			{ UNIT_TYPEID::TERRAN_GHOST, {150, 125, 2} }
-		};
-	}
-
-	static const UnitCostMap FACTORY_UNITS() {
-		return { { UNIT_TYPEID::TERRAN_HELLION, {100, 0, 0} },
+			{ UNIT_TYPEID::TERRAN_GHOST, {150, 125, 2} },
+			{ UNIT_TYPEID::TERRAN_HELLION, {100, 0, 0} },
 			{ UNIT_TYPEID::TERRAN_HELLIONTANK, {100, 0, 0} },
 			{ UNIT_TYPEID::TERRAN_SIEGETANK, {150, 125, 3} },
 			{ UNIT_TYPEID::TERRAN_CYCLONE, {150, 100, 3} },
 			{ UNIT_TYPEID::TERRAN_WIDOWMINE, {75, 25, 2} },
-			{ UNIT_TYPEID::TERRAN_THOR, {300, 200, 6} }
-		};
-	}
-
-	static const UnitCostMap STARPORT_UNITS() {
-		return { { UNIT_TYPEID::TERRAN_VIKINGFIGHTER, {150, 75, 2} },
+			{ UNIT_TYPEID::TERRAN_THOR, {300, 200, 6} },
+			{ UNIT_TYPEID::TERRAN_VIKINGFIGHTER, {150, 75, 2} },
 			{ UNIT_TYPEID::TERRAN_MEDIVAC, {100, 100, 2} },
 			{ UNIT_TYPEID::TERRAN_LIBERATOR, {150, 150, 3} },
 			{ UNIT_TYPEID::TERRAN_RAVEN, {100, 200, 2} },
