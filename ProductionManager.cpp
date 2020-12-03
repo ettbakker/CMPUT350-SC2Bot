@@ -16,7 +16,7 @@ void ProductionManager::BuildStructures() {
 		
 		//Check if no command center is near by. If there is none, try to build the command center first before anything else
 		if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 25) == 0) {
-			TryBuildCommandCenter(10.0);
+			TryBuildCommandCenter(0.0);
 			continue;
 		}
 		else {
@@ -38,7 +38,7 @@ void ProductionManager::BuildStructures() {
 		
 	}
 	
-
+	
 }
 
 // Generic methods for attempting to build any structure
@@ -125,7 +125,7 @@ bool ProductionManager::CanBuildCommandCenter() {
 bool ProductionManager::CanBuildBarracks() {
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 2) ||
 		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 5) ||
-		((CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > 2) && (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size())) ||
+		//((CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > 2) && (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size())) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > (bases.size() * 3))) {
 		return false;
 	}
@@ -427,24 +427,24 @@ void ProductionManager::OnIdleBarracks(const Unit* unit) {
 	if (unit->add_on_tag == 0)
 	{
 		if (observation->GetArmyCount() > 20) {
-			TryBuildAddOn(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
+			//TryBuildAddOn(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
 		}
 	}
 	/*if (observation->GetArmyCount() > (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) * 20)) {
 		return;
 	}*/
-	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) >= bases.size()) {
-		if ((unit->add_on_tag != 0) && (CountUnitType(UNIT_TYPEID::TERRAN_MARAUDER) < 5)) {
+	//if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) >= bases.size()) {
+		/*if ((unit->add_on_tag != 0) && (CountUnitType(UNIT_TYPEID::TERRAN_MARAUDER) < 5)) {
 			//std::cout << "Tag: " << unit->add_on_tag << std::endl;
 			actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARAUDER, true);
 			return;
-		}
-		else if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
+		}*/
+		if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
 			actions->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER, true);
 		}
 		//std::cout << "Tag: " << unit->add_on_tag << std::endl;
 		actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE, true);
-	}
+	//}
 	
 	
 	

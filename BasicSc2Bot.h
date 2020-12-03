@@ -4,6 +4,7 @@
 #include "sc2api/sc2_api.h"
 #include "sc2api/sc2_args.h"
 #include "sc2lib/sc2_lib.h"
+#include <sc2lib/sc2_search.h>
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
 #include <sc2api\sc2_unit_filters.h>
@@ -20,7 +21,7 @@ public:
 	virtual void OnGameStart();
 	virtual void OnStep();
 	virtual void OnUnitIdle(const Unit* unit);
-	virtual void OnGameOver();
+	virtual void OnGameEnd();
 
 private:
 	// Variables
@@ -29,7 +30,9 @@ private:
 	size_t randomMarineLocation = 0;
 	bool enemySpotted = false;
 	Bases bases;
-	bool AddBase(const Unit* unit);
+	bool AddBase();
+	std::vector<Point3D> expansionLocations;
+	void SortExpansionLocations();
 	size_t thirdBaseAttempt = 0;
 };
 
