@@ -95,6 +95,12 @@ Point2D Manager::GetStartPoint()
 	return observation->GetStartLocation();
 }
 
+Point2D Manager::GetRandomNearbyPoint(Point2D start_point, float distance)
+{
+	float rx = GetRandomScalar(), ry = GetRandomScalar();
+	return Point2D(start_point.x + rx * distance, start_point.y + ry * distance);
+}
+
 void Manager::SetObservationAndActions(const ObservationInterface* obs, ActionInterface* act, Bases& b) {
 	observation = obs;
 	actions = act;
