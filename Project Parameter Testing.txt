@@ -1,0 +1,39 @@
+5 runs per parameter set
+	Difficulty: Easy, Medium
+	Race: Terran, Zerg, Protoss
+	Map: CactusValley, BelShirVestige, ProximaStation
+	
+2 * 3 * 3 = 18 paramater sets, 5 runs each, 90 runs, 4 people, 22 runs per person
+
+D = Difficulty
+R = Race
+M = Map
+
+Seth:
+D:Easy, R:Terran, M:CactusValleyLE
+D:Easy, R:Terran, M:BelShirVestigeLE
+D:Easy, R:Terran, M:ProximaStationLE
+D:Easy, R:Zerg, M:CactusValleyLE
+
+Daniel:
+D:Easy, R:Zerg, M:BelShirVestigeLE
+D:Easy, R:Zerg, M:ProximaStationLE
+D:Easy, R:Protoss, M:CactusValleyLE
+D:Easy, R:Protoss, M:BelShirVestigeLE
+
+Jacob:
+D:Easy, R:Protoss, M:ProximaStationLE	RESULTS: #/5 CCCCC
+D:Medium, R:Terran, M:CactusValleyLE	RESULTS: #/5 LLLLL
+D:Medium, R:Terran, M:BelShirVestigeLE	RESULTS: #/5 LLLLL
+D:Medium, R:Terran, M:ProximaStationLE	RESULTS: #/5 CCCCC
+D:Medium, R:Zerg, M:CactusValleyLE		RESULTS: #/5 LLLLL
+
+Jandaile:
+D:Medium, R:Zerg, M:BelShirVestigeLE
+D:Medium, R:Zerg, M:ProximaStationLE
+D:Medium, R:Protoss, M:CactusValleyLE
+D:Medium, R:Protoss, M:BelShirVestigeLE
+D:Medium, R:Protoss, M:ProximaStationLE
+
+
+	
