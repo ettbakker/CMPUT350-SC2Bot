@@ -30,8 +30,8 @@ void BasicSc2Bot::OnGameEnd() {
 
 void BasicSc2Bot::OnStep()
 {
-	prodMngr->SetObservationAndActions(Observation(), Actions(), bases);
-	combatMngr->SetObservationAndActions(Observation(), Actions(), bases);
+	prodMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
+	combatMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
 	prodMngr->BuildStructures();
 	combatMngr->AttackEnemy();
 	AddBase();
@@ -40,8 +40,8 @@ void BasicSc2Bot::OnStep()
 
 void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 {
-	prodMngr->SetObservationAndActions(Observation(), Actions(), bases);
-	combatMngr->SetObservationAndActions(Observation(), Actions(), bases);
+	prodMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
+	combatMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
 
 	switch (unit->unit_type.ToType()) {
 		// buildings
@@ -56,9 +56,19 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 			prodMngr->OnIdleBarracks(unit);  break;
 		}
 
+		case UNIT_TYPEID::TERRAN_FACTORY:
+		{
+			prodMngr->OnIdleFactory(unit); break;
+		}
+
 		case UNIT_TYPEID::TERRAN_ENGINEERINGBAY:
 		{
 			prodMngr->OnIdleEngineeringBay(unit);  break;
+		}
+
+		case UNIT_TYPEID::TERRAN_ARMORY:
+		{
+			prodMngr->OnIdleArmory(unit); break;
 		}
 
 		case UNIT_TYPEID::TERRAN_ORBITALCOMMAND:
@@ -133,7 +143,7 @@ void BasicSc2Bot::SortExpansionLocations() {
 bool BasicSc2Bot::AddBase() {
 	
 	//Bases are already sorted so add next expansion location that isn't already in our bases
-	if (bases.size() < 4) {
+	if (bases.size() < 3) {
 		if (bases.size() < expansionLocations.size()) {
 			Point2D newLocation = Point2D(expansionLocations[bases.size()-1].x, expansionLocations[bases.size()-1].y);
 			bases.push_back(new Base(newLocation));

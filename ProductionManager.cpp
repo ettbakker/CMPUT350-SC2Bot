@@ -20,13 +20,13 @@ void ProductionManager::BuildStructures() {
 			continue;
 		}
 		else {
-			TryBuildSupplyDepot(20);
+			TryBuildSupplyDepot();
 			TryBuildRefinery();
-			TryBuildBarracks(20);
+			TryBuildBarracks();
 			TryBuildEngineeringBay();
 			TryBuildFactory();
 			TryBuildArmory();
-			TryBuildTurrets(40.0);
+			TryBuildTurrets(30.0);
 		}
     
 		/*}
@@ -107,7 +107,7 @@ bool ProductionManager::CanBuildSupplyDepot() {
 	/*if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2) {
 		return false;
 	}*/
-	if ((CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_SUPPLYDEPOT, building_point) >= 15) ||
+	if ((CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_SUPPLYDEPOT, building_point) >= (10*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER))) ||
 		((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 5) && (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size())) ||
 		(observation->GetFoodCap() > (bases.size() * 60))) {
 		return false;
@@ -119,7 +119,7 @@ bool ProductionManager::CanBuildCommandCenter() {
 	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) > 3) {
 		return false;
 	}
-	if (bases.size() > 4) {
+	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)>0 && CountUnitType(UNIT_TYPEID::TERRAN_MARINE) < 10) {
 		return false;
 	}
 	return true;
@@ -128,8 +128,9 @@ bool ProductionManager::CanBuildCommandCenter() {
 bool ProductionManager::CanBuildBarracks() {
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 2) ||
 		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 5) ||
-		//((CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > 2) && (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size())) ||
-		(CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > (bases.size() * 3))) {
+		((CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > 4) && (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size())) ||
+		(CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > (bases.size() * 3)) ||
+		((CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) < 1) && (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) >1))) {
 		return false;
 	}
 	return true;
@@ -147,10 +148,9 @@ bool ProductionManager::CanBuildEngineeringBay() {
 }
 
 bool ProductionManager::CanBuildFactory() {
-	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 5)||
-		(CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) < 3) ||
-		(CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < 2) ||
-		(CountUnitType(UNIT_TYPEID::TERRAN_MARINE) < 25) ||
+	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 2)||
+		(CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) < 1) ||
+		(CountUnitType(UNIT_TYPEID::TERRAN_MARINE) < 5) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) > (bases.size() * 2)) ||
 		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_FACTORY, building_point) >= 1)) {
 		return false;
@@ -162,7 +162,8 @@ bool ProductionManager::CanBuildFactory() {
 bool ProductionManager::CanBuildArmory()
 {
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) < 1) ||
-		(CountUnitType(UNIT_TYPEID::TERRAN_ARMORY) >= 2)) {
+		(CountUnitType(UNIT_TYPEID::TERRAN_ARMORY) >= 2) ||
+		(CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < 2)) {
 		return false;
 	}
 	return true;
@@ -191,8 +192,9 @@ bool ProductionManager::CanBuildFusionCore() {
 bool ProductionManager::CanBuildTurret() {
 	//Need an engineering bay to build turrets
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_ENGINEERINGBAY) < 1) ||
-		(CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size()) ||
-		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_MISSILETURRET, building_point) > 5)) {
+		(CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) * 2 < bases.size()) ||
+		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_MISSILETURRET, building_point) > 15) ||
+		(building_point == bases[0]->origin)) {
 		return false;
 	}
 	return true;
@@ -429,28 +431,33 @@ void ProductionManager::OnIdleBarracks(const Unit* unit) {
 
 	if (unit->add_on_tag == 0)
 	{
-		if (observation->GetArmyCount() > 20) {
-			//TryBuildAddOn(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
+		if (observation->GetArmyCount() > 30) {
+			TryBuildAddOn(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
 		}
 	}
 	/*if (observation->GetArmyCount() > (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) * 20)) {
 		return;
 	}*/
-	//if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) >= bases.size()) {
-		/*if ((unit->add_on_tag != 0) && (CountUnitType(UNIT_TYPEID::TERRAN_MARAUDER) < 5)) {
-			//std::cout << "Tag: " << unit->add_on_tag << std::endl;
-			actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARAUDER, true);
-			return;
-		}*/
-		if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
-			actions->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER, true);
-		}
+	
+	//There's a tech lab so try and have one marauder for every 7 marines
+	if ((unit->add_on_tag != 0) && (CountUnitType(UNIT_TYPEID::TERRAN_MARAUDER)*7 < CountUnitType(UNIT_TYPEID::TERRAN_MARINE))) {
 		//std::cout << "Tag: " << unit->add_on_tag << std::endl;
-		actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE, true);
-	//}
+		actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARAUDER, true);
+		return;
+	}
+	if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
+		actions->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER, true);
+	}
+	//std::cout << "Tag: " << unit->add_on_tag << std::endl;
+	actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE, true);
 	
-	
-	
+}
+
+
+void ProductionManager::OnIdleFactory(const Unit* unit) {
+	if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_HELLION)*3 ) {
+		actions->UnitCommand(unit, ABILITY_ID::TRAIN_HELLION);
+	}
 }
 
 void ProductionManager::OnIdleEngineeringBay(const Unit* unit) {
@@ -510,29 +517,29 @@ void ProductionManager::TryBuildAddOn(const Unit* unit, ABILITY_ID add_on_abilit
 }
 
 void ProductionManager::OnIdleArmory(const Unit* unit) {
-	std::vector<UpgradeID> upgrades = observation->GetUpgrades();
-
-
-	for (auto u : upgrades) {
-		if (u == UPGRADE_ID::TERRANVEHICLEANDSHIPWEAPONSLEVEL3) {
-			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEANDSHIPPLATINGLEVEL3);
-			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANSHIPWEAPONSLEVEL3);
-			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEWEAPONSLEVEL3);
-			break;
-		}
-		if (u == UPGRADE_ID::TERRANVEHICLEANDSHIPWEAPONSLEVEL2) {
-			std::cout << "Reasearching" << std::endl;
-			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEANDSHIPPLATINGLEVEL2);
-			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANSHIPWEAPONSLEVEL2);
-			actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEWEAPONSLEVEL2);
-			break;
-		}
+	auto upgrades = observation->GetUpgrades();
+	if (!upgrades.empty()) {
+		for (const auto& u : upgrades)
+			if (u == UPGRADE_ID::TERRANVEHICLEANDSHIPWEAPONSLEVEL3) {
+				actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEANDSHIPPLATINGLEVEL3,true);
+				actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANSHIPWEAPONSLEVEL3,true);
+				actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEWEAPONSLEVEL3,true);
+				break;
+			}
+			else if (u == UPGRADE_ID::TERRANVEHICLEANDSHIPWEAPONSLEVEL2) {
+				std::cout << "Reasearching" << std::endl;
+				actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEANDSHIPPLATINGLEVEL2,true);
+				actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANSHIPWEAPONSLEVEL2,true);
+				actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEWEAPONSLEVEL2,true);
+				break;
+			}
 	}
 
-	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEANDSHIPPLATINGLEVEL1);
-	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANSHIPWEAPONSLEVEL1);
-	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEWEAPONSLEVEL1);
+	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEANDSHIPPLATINGLEVEL1,true);
+	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANSHIPWEAPONSLEVEL1,true);
+	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEWEAPONSLEVEL1,true);
 }
+
 
 // Build utility methods
 Point2D ProductionManager::GetNearbyPoint(const Point2D& start_point, float build_radius)
