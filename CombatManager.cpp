@@ -165,22 +165,22 @@ bool CombatManager::FindEnemyBase()
 	}
 
 	for (auto beg = begin(scoutingMarines); beg != end(scoutingMarines); ++beg) {
+		actions->UnitCommand(beg->first, ABILITY_ID::ATTACK_ATTACK, scoutingMarines[beg->first]);
 		if ((beg->first->health_max - beg->first->health) > 0) {
-			enemies = observation->GetUnits(Unit::Alliance::Enemy);
+			Units enemies = observation->GetUnits(Unit::Alliance::Enemy);
+			int closeEnemies = 0;
 			for (auto enemy : enemies) {
-
+				if (closeEnemies > 5) { break; }
+				if (Distance3D(enemy->pos, beg->first->pos) < 15) { ++closeEnemies; }
 			}
-			enemyStartLocation = beg->second;
-			std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
-			return true;
+			if (closeEnemies > 5) {
+				enemyStartLocation = beg->second;
+				std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
+				return true;
+			}
+			
 		}
 	}
-
-	if (printer == 0) {
-		std::cout << "There are " << scoutingMarines.size() << " units scouting!" << std::endl;
-	}
-
-	printer = (printer + 1) % 50;
 
 	return false;
 }
