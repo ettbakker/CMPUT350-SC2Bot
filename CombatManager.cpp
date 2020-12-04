@@ -133,10 +133,17 @@ void CombatManager::OnIdleReaper(const Unit* unit) {
 
 bool CombatManager::FindEnemyBase()
 {
+	static int closeEnemiesPushover;
 	static int printer;
 	const GameInfo& game_info = observation->GetGameInfo();
 	Point2D p;
 	if (enemyStartLocation != p) {
+		for (auto beg = begin(scoutingMarines); beg != end(scoutingMarines); ++beg) {
+			Point2D newPoint = bases[bases.size() - 1]->origin;
+			newPoint = Point2D(newPoint.x + GetRandomScalar() * 15.0f, newPoint.y + GetRandomScalar() * 15.0f);
+			actions->UnitCommand(beg->first, ABILITY_ID::ATTACK_ATTACK, newPoint);
+		}
+		scoutingMarines.clear();
 		return true;
 	}
 	//    for (auto unit : units) {
