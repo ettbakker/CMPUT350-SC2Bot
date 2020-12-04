@@ -130,3 +130,57 @@ void CombatManager::OnIdleMarine(const Unit* unit) {
 void CombatManager::OnIdleReaper(const Unit* unit) {
 
 }
+
+bool CombatManager::FindEnemyBase()
+{
+	static int printer;
+	const GameInfo& game_info = observation->GetGameInfo();
+	Point2D p;
+	if (enemyStartLocation != p) {
+		return true;
+	}
+	//    for (auto unit : units) {
+
+	//If there are less marines currently scouting than there are possible enemy locations.
+	//Send more marines to scout.
+	if (scoutingMarines.size() < game_info.enemy_start_locations.size()) {
+		Units marines = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_MARINE));
+		int round;
+		for (auto marine : marines) {
+			//make sure there still aren't enough scouters
+			if (scoutingMarines.size() >= game_info.enemy_start_locations.size()) {	}
+
+			//make sure that this marine is not already scouting
+			else if (scoutingMarines.find(marine) != scoutingMarines.end()) {  }
+
+			//add this marine to the scouters and send them off to attack
+			else {
+				Point2D possibleLocation = game_info.enemy_start_locations[scoutingMarines.size()];
+				scoutingMarines[marine] = possibleLocation;
+				actions->UnitCommand(marine, ABILITY_ID::ATTACK_ATTACK, possibleLocation);
+			}
+
+		}
+		
+	}
+
+	for (auto beg = begin(scoutingMarines); beg != end(scoutingMarines); ++beg) {
+		if ((beg->first->health_max - beg->first->health) > 0) {
+			enemies = observation->GetUnits(Unit::Alliance::Enemy);
+			for (auto enemy : enemies) {
+
+			}
+			enemyStartLocation = beg->second;
+			std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
+			return true;
+		}
+	}
+
+	if (printer == 0) {
+		std::cout << "There are " << scoutingMarines.size() << " units scouting!" << std::endl;
+	}
+
+	printer = (printer + 1) % 50;
+
+	return false;
+}

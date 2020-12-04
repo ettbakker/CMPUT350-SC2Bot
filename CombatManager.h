@@ -14,7 +14,11 @@ public:
 	bool AttackEnemy();
 	void OnIdleMarine(const Unit* unit);
 	void OnIdleReaper(const Unit* unit);
+	bool FindEnemyBase();
 	
 private:
 	size_t numberIdleMarines = 0;
+	Point2D enemyStartLocation;
+	std::map<const Unit*, Point2D> scoutingMarines;
+	bool foundEnemyBase;
 };
