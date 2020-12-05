@@ -17,15 +17,14 @@ public:
 	bool AllOutAttackEnemy();
 	void OnIdleMarine(const Unit* unit);
 	void OnIdleReaper(const Unit* unit);
+	bool FindEnemyBase();
 	
 private:
 	size_t numberIdleMarines = 0;
 	Point2D enemyStartLocation, lastAllOutPos;
 	bool allOutAttack = false;
 	bool foundEnemyBase = false;
-	std::vector<UNIT_TYPEID> army_unit_types = { UNIT_TYPEID::TERRAN_MARINE,
-			UNIT_TYPEID::TERRAN_REAPER,
-			UNIT_TYPEID::TERRAN_MARAUDER,
-			UNIT_TYPEID::TERRAN_HELLION,
-			UNIT_TYPEID::TERRAN_HELLIONTANK };
+	Point2D enemyStartLocation;
+	std::map<const Unit*, Point2D> scoutingMarines;
+	bool foundEnemyBase;
 };

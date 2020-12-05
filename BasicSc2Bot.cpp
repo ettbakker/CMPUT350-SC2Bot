@@ -36,6 +36,7 @@ void BasicSc2Bot::OnStep()
 	combatMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
 	prodMngr->BuildStructures();
 	combatMngr->AttackEnemy();
+	combatMngr->FindEnemyBase();
 	AddBase();
 	
 }
