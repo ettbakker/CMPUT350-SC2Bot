@@ -96,7 +96,7 @@ bool ProductionManager::TryBuildStructureInBase(ABILITY_ID build_ability, const 
 // Methods for verifying whether a certain structure can be built
 
 bool ProductionManager::CanBuildRefinery() {
-	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 100) >= 2*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
+	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 100) >= 1*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
 		return false;
 	}
 	return true;
@@ -104,14 +104,15 @@ bool ProductionManager::CanBuildRefinery() {
 
 bool ProductionManager::CanBuildSupplyDepot() {
 	// If we are not supply capped, don't build a supply depot.
-	/*if (observation->GetFoodUsed() <= observation->GetFoodCap() - 2) {
+	if ((observation->GetFoodUsed() <= observation->GetFoodCap() - 20) &&
+		(CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 3)) {
 		return false;
-	}*/
-	if ((CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_SUPPLYDEPOT, building_point) >= (10*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER))) ||
+	}
+	/*if ((CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_SUPPLYDEPOT, building_point) >= (10*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER))) ||
 		((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 5) && (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size())) ||
 		(observation->GetFoodCap() > (bases.size() * 60))) {
 		return false;
-	}
+	}*/
 	return true;
 }
 
@@ -126,7 +127,7 @@ bool ProductionManager::CanBuildCommandCenter() {
 }
 
 bool ProductionManager::CanBuildBarracks() {
-	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 2) ||
+	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 1) ||
 		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 5) ||
 		((CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > 4) && (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size())) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > (bases.size() * 3)) ||

@@ -4,6 +4,7 @@
 #include "Manager.h"
 #include "Command.h"
 #include "Base.h"
+#include "TerranUnitCategories.h"
 
 using namespace sc2;
 

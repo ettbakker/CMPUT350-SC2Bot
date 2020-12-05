@@ -25,7 +25,61 @@ bool CombatManager::AttackEnemy() {
 			}
 		}
 	}
-	//Send all units to the enemy
+
+
+	if (target != nullptr) {
+		for (auto armyUnit : TerranUnitCategories::BARRACKS_UNITS()) {
+			Filter filter = IsUnit(armyUnit);
+			Units units = observation->GetUnits(Unit::Alliance::Self, filter);
+			if (units.size() > 0) {
+				if (attack) {
+					//We have already spotted an enemy
+					actions->UnitCommand(units, ABILITY_ID::ATTACK, target);
+				}
+				else if ((observation->GetArmyCount() > 80)) {
+					actions->UnitCommand(units, ABILITY_ID::ATTACK, target);
+				}
+
+				if (observation->GetArmyCount() < 30) {
+					//If there is a target and they are far away, call back all units so they don't keep chasing it
+					//because our army is still small
+					//Recall to nearest command center
+					Point2D recallPoint = bases[bases.size() - 1]->origin;
+					actions->UnitCommand(units, ABILITY_ID::SMART, recallPoint);
+				}
+			}
+		}
+	}
+	else if (observation->GetArmyCount() > 80) {
+
+		//We need to find an enemy location so choose a random expansion location or start location
+		Point2D attackPoint = observation->GetStartLocation();
+		size_t randomLoc = 0;
+		if ((rand() % 2) == 0) {
+			randomLoc = rand() % game_info.enemy_start_locations.size();
+			attackPoint = game_info.enemy_start_locations[randomLoc];
+		}
+		else {
+			randomLoc = rand() % expansionLocations.size();
+			attackPoint = expansionLocations[randomLoc];
+		}
+		//Attack the location
+		if (CountUnitType(UNIT_TYPEID::TERRAN_HELLION) > 0) {
+			Filter filter = IsUnit(UNIT_TYPEID::TERRAN_HELLION);
+			Units hellion = observation->GetUnits(Unit::Alliance::Self, filter);
+			actions->UnitCommand(hellion[0], ABILITY_ID::ATTACK, attackPoint, true);
+		}
+		else if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) >0) {
+			Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
+			Units marines = observation->GetUnits(Unit::Alliance::Self, filter);
+			actions->UnitCommand(marines[0], ABILITY_ID::ATTACK, attackPoint, true);
+		}
+
+		return true;
+	}
+
+
+	/*//Send all units to the enemy
 	Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
 	Units marines = observation->GetUnits(Unit::Alliance::Self, filter);
 	filter = IsUnit(UNIT_TYPEID::TERRAN_REAPER);
@@ -97,7 +151,7 @@ bool CombatManager::AttackEnemy() {
 			actions->UnitCommand(tank, ABILITY_ID::SMART, recallPoint);
 			actions->UnitCommand(hellion, ABILITY_ID::SMART, recallPoint);
 		}
-	}
+	}*/
 	
 
 
