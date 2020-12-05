@@ -30,6 +30,8 @@ void BasicSc2Bot::OnGameEnd() {
 
 void BasicSc2Bot::OnStep()
 {
+	step_count++;
+
 	prodMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
 	combatMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
 	prodMngr->BuildStructures();

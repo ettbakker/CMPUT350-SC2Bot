@@ -35,6 +35,7 @@ private:
 	std::vector<Point3D> expansionLocations;
 	void SortExpansionLocations();
 	size_t thirdBaseAttempt = 0;
+	size_t step_count = 0;
 };
 
 #endif

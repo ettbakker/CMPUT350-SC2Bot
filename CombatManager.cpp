@@ -1,4 +1,5 @@
 #include "CombatManager.h"
+#include "D:/Documents/TerranUnitCategories.h"
 
 CombatManager::CombatManager()
 {
@@ -102,6 +103,58 @@ bool CombatManager::AttackEnemy() {
 
 
 	return false;
+}
+
+bool CombatManager::AllOutAttackEnemy()
+{
+	Units army, next_army_batch, enemies = observation->GetUnits(Unit::Alliance::Enemy);
+	float closest_d = std::numeric_limits<float>::max();
+	Point2D target_point = enemyStartLocation;
+	
+
+	if (!foundEnemyBase) {
+		return false;
+	}
+
+	// Get all army units
+	for (auto unit_type : BSB_TerranUnitCategories::MAIN_ARMY_UNITS()) {
+		next_army_batch = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
+		army.insert(army.end(), next_army_batch.begin(), next_army_batch.end());
+	};
+
+	// Do nothing if there's no army to command
+	if (army.size() == 0) {
+		return false;
+	}
+
+	// If an all-out attack wasn't already called, send entire army to enemy's main base
+	if (!allOutAttack) {
+		actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, enemyStartLocation);
+		lastAllOutPos = enemyStartLocation;
+		allOutAttack = true;
+	}
+	// If all-out attack in progress, keep targeting enemies close to enemy base until all are wiped out.
+	else {
+		// Do nothing if there's no enemies in sight
+		if (enemies.size() == 0) {
+			return false;
+		}
+
+		for (auto e : enemies) {
+			float d = DistanceSquared2D(e->pos, lastAllOutPos);
+			if (d < closest_d) {
+				closest_d = d;
+				target_point = e->pos;
+			}
+		}
+		// Goto nearest enemy if its some distance from the last attack location
+		if (closest_d < 30.0f) {
+			lastAllOutPos = target_point;
+			actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, lastAllOutPos);
+		}
+	}
+
+	return true;
 }
 
 void CombatManager::OnIdleMarine(const Unit* unit) {
