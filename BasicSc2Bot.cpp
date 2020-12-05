@@ -30,12 +30,23 @@ void BasicSc2Bot::OnGameEnd() {
 
 void BasicSc2Bot::OnStep()
 {
+	step_count++;
+	if (step_count % 1000 == 0) {
+		std::cout << "STEP:" << step_count << std::endl;
+	}
+
 	prodMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
 	combatMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
 	prodMngr->BuildStructures();
-	combatMngr->AttackEnemy();
 	combatMngr->FindEnemyBase();
-	AddBase();
+	if ((step_count % 5000) == 0) {
+		AddBase();
+	}
+	
+	if (step_count >= 11000) {
+		combatMngr->AllOutAttackEnemy();
+	}
+	combatMngr->AttackEnemy();
 	
 }
 
@@ -113,6 +124,7 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 //Sort the expansion location in order of closest to main base
 //Simple bubble sort
 void BasicSc2Bot::SortExpansionLocations() {
+	const GameInfo& game_info = Observation()->GetGameInfo();
 	Point3D tempPoint;
 	Point2D point1;
 	Point2D point2;
@@ -120,10 +132,15 @@ void BasicSc2Bot::SortExpansionLocations() {
 	int distance2;
 	bool stillSwapping = false;
 	std::cout << "Exp size: " << expansionLocations.size() << std::endl;
+	//Add enemy start locations as possible expansion points
+	for (size_t i = 0; i < game_info.enemy_start_locations.size(); i++) {
+		Point3D extraLoc = Point3D(game_info.enemy_start_locations[i].x, game_info.enemy_start_locations[i].y, 0);
+		expansionLocations.push_back(extraLoc);
+	}
 	for (size_t i = 0; i < expansionLocations.size(); i++) {
 		for (size_t j = 0; j < expansionLocations.size()-i-1; j++) {
-			point1 = Point2D(expansionLocations[j].x, expansionLocations[j].y);
-			point2 = Point2D(expansionLocations[j + 1].x, expansionLocations[j + 1].y);
+			point1 = expansionLocations[j];
+			point2 = expansionLocations[j+1];
 			distance1 = Distance2D(Observation()->GetStartLocation(), point1);
 			distance2 = Distance2D(Observation()->GetStartLocation(), point2);
 			if (distance1 > distance2) {

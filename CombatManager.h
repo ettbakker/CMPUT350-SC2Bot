@@ -5,6 +5,7 @@
 #include "Command.h"
 #include "Base.h"
 #include "TerranUnitCategories.h"
+#include <list>
 
 using namespace sc2;
 
@@ -13,13 +14,22 @@ public:
 	CombatManager();
 
 	bool AttackEnemy();
+	bool AllOutAttackEnemy();
 	void OnIdleMarine(const Unit* unit);
 	void OnIdleReaper(const Unit* unit);
 	bool FindEnemyBase();
+	void sortAndAddSweepLocations(Point2D fromPoint);
 	
 private:
 	size_t numberIdleMarines = 0;
-	Point2D enemyStartLocation;
+	Point2D enemyStartLocation, lastAllOutPos;
+	bool allOutAttack = false;
+	bool foundEnemyBase = false;
 	std::map<const Unit*, Point2D> scoutingMarines;
-	bool foundEnemyBase;
+	std::vector<Point2D> sweepLocations;
+	size_t sweepLocationCounter = 0;
+	bool sweeping = false;
+	const Unit* targetAtBase = nullptr;
+	bool defendBase = false;
+	size_t numEnemyAtBase = 0;
 };
