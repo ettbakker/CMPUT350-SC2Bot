@@ -50,7 +50,7 @@ bool CombatManager::AttackEnemy() {
 			}
 		}
 	}
-	else if (observation->GetArmyCount() > 80) {
+	else if (observation->GetArmyCount() > 60)  {
 
 		//We need to find an enemy location so choose a random expansion location or start location
 		Point2D attackPoint = observation->GetStartLocation();
@@ -64,94 +64,35 @@ bool CombatManager::AttackEnemy() {
 			attackPoint = expansionLocations[randomLoc];
 		}
 		//Attack the location
+		float rx;
+		float ry;
 		if (CountUnitType(UNIT_TYPEID::TERRAN_HELLION) > 0) {
 			Filter filter = IsUnit(UNIT_TYPEID::TERRAN_HELLION);
 			Units hellion = observation->GetUnits(Unit::Alliance::Self, filter);
-			actions->UnitCommand(hellion[0], ABILITY_ID::ATTACK, attackPoint, true);
+			for (size_t i = 0; (i < hellion.size())|| (i<5); i++) {
+				//Send the units randomly around the location
+				rx = GetRandomScalar();
+				ry = GetRandomScalar();
+				attackPoint = Point2D(attackPoint.x + rx * 15.0f, attackPoint.y + ry * 15.0f);
+				actions->UnitCommand(hellion[0], ABILITY_ID::ATTACK, attackPoint, true);
+			}
 		}
 		else if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) >0) {
 			Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
 			Units marines = observation->GetUnits(Unit::Alliance::Self, filter);
-			actions->UnitCommand(marines[0], ABILITY_ID::ATTACK, attackPoint, true);
+			for (size_t i = 0; (i < marines.size()) || (i < 5); i++) {
+				//Send the units randomly around the location
+				rx = GetRandomScalar();
+				ry = GetRandomScalar();
+				attackPoint = Point2D(attackPoint.x + rx * 15.0f, attackPoint.y + ry * 15.0f);
+				actions->UnitCommand(marines[0], ABILITY_ID::ATTACK, attackPoint, true);
+			}
 		}
 
 		return true;
 	}
 
 
-	/*//Send all units to the enemy
-	Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
-	Units marines = observation->GetUnits(Unit::Alliance::Self, filter);
-	filter = IsUnit(UNIT_TYPEID::TERRAN_REAPER);
-	Units reapers = observation->GetUnits(Unit::Alliance::Self, filter);
-	filter = IsUnit(UNIT_TYPEID::TERRAN_MARAUDER);
-	Units marauder = observation->GetUnits(Unit::Alliance::Self, filter);
-	filter = IsUnit(UNIT_TYPEID::TERRAN_SIEGETANK);
-	Units tank = observation->GetUnits(Unit::Alliance::Self, filter);
-	filter = IsUnit(UNIT_TYPEID::TERRAN_HELLION);
-	Units hellion = observation->GetUnits(Unit::Alliance::Self, filter);
-
-	if (marines.size() > 1) {
-		if (attack && (target != nullptr)) {
-			//TODO: Allow other units to attack
-			//We have already spotted an enemy
-			actions->UnitCommand(marines, ABILITY_ID::ATTACK_ATTACK, target);
-			actions->UnitCommand(reapers, ABILITY_ID::ATTACK_ATTACK, target);
-			actions->UnitCommand(marauder, ABILITY_ID::ATTACK_ATTACK, target);
-			actions->UnitCommand(tank, ABILITY_ID::ATTACK_ATTACK, target);
-			actions->UnitCommand(hellion, ABILITY_ID::ATTACK_ATTACK, target);
-			return true;
-		} else if ((observation->GetArmyCount() > 80) && (target != nullptr)) {
-			//TODO: Allow other units to attack
-			//We have already spotted an enemy
-			actions->UnitCommand(marines, ABILITY_ID::ATTACK_ATTACK, target);
-			actions->UnitCommand(reapers, ABILITY_ID::ATTACK_ATTACK, target);
-			actions->UnitCommand(marauder, ABILITY_ID::ATTACK_ATTACK, target);
-			actions->UnitCommand(tank, ABILITY_ID::ATTACK_ATTACK, target);
-			actions->UnitCommand(hellion, ABILITY_ID::ATTACK_ATTACK, target);
-			return true;
-		}
-		else if (observation->GetArmyCount() > 80) { 
-			//We need to find an enemy location so choose a random expansion location or start location
-			Point2D attackPoint = observation->GetStartLocation();
-			size_t randomLoc = 0;
-			if ((rand() % 2) == 0) {
-				randomLoc = rand() % game_info.enemy_start_locations.size();
-				attackPoint = game_info.enemy_start_locations[randomLoc];
-			}
-			else {
-				randomLoc = rand() % expansionLocations.size();
-				attackPoint = expansionLocations[randomLoc];
-			}
-			//Attack the location
-			//actions->UnitCommand(reapers, ABILITY_ID::ATTACK, attackPoint,true);
-			//actions->UnitCommand(marauder, ABILITY_ID::ATTACK, attackPoint,true);
-			//actions->UnitCommand(tank, ABILITY_ID::ATTACK, attackPoint,true);
-			if (CountUnitType(UNIT_TYPEID::TERRAN_HELLION) > 0) {
-				actions->UnitCommand(hellion[0], ABILITY_ID::ATTACK, attackPoint, true);
-			}
-			else {
-				actions->UnitCommand(marines[0], ABILITY_ID::ATTACK, attackPoint,true);
-			}
-			
-			return true;
-
-		}
-
-		if ((target != nullptr) && observation->GetArmyCount() < 30){
-			//If there is a target and they are far away, call back all units so they don't keep chasing it
-			//because our army is still small
-			//Recall to nearest command center
-			//**CRASHINGconst Unit *unitPoint = GetNearestUnit(marines[0]->pos, UNIT_TYPEID::TERRAN_COMMANDCENTER);
-			Point2D recallPoint = bases[bases.size()-1]->origin;
-		
-			actions->UnitCommand(marines, ABILITY_ID::SMART, recallPoint);
-			actions->UnitCommand(reapers, ABILITY_ID::SMART, recallPoint);
-			actions->UnitCommand(marauder, ABILITY_ID::SMART, recallPoint);
-			actions->UnitCommand(tank, ABILITY_ID::SMART, recallPoint);
-			actions->UnitCommand(hellion, ABILITY_ID::SMART, recallPoint);
-		}
-	}*/
 	
 
 
