@@ -31,6 +31,9 @@ void BasicSc2Bot::OnGameEnd() {
 void BasicSc2Bot::OnStep()
 {
 	step_count++;
+	if (step_count % 100 == 0) {
+		std::cout << "STEP:" << step_count << std::endl;
+	}
 
 	prodMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
 	combatMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
@@ -38,6 +41,10 @@ void BasicSc2Bot::OnStep()
 	combatMngr->AttackEnemy();
 	combatMngr->FindEnemyBase();
 	AddBase();
+
+	if (step_count >= 8000) {
+		combatMngr->AllOutAttackEnemy();
+	}
 	
 }
 

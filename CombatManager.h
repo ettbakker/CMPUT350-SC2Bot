@@ -24,7 +24,5 @@ private:
 	Point2D enemyStartLocation, lastAllOutPos;
 	bool allOutAttack = false;
 	bool foundEnemyBase = false;
-	Point2D enemyStartLocation;
 	std::map<const Unit*, Point2D> scoutingMarines;
-	bool foundEnemyBase;
 };

@@ -12,6 +12,10 @@ bool CombatManager::AttackEnemy() {
 	float distance = std::numeric_limits<float>::max();
 	const Unit* target = nullptr;
 	bool attack = false;
+
+	if (allOutAttack) {
+		return false;
+	}
 	//For all enemies, attack the one that is closest to the base
 	for (auto e : enemies) {
 		for (auto b : bases) {
@@ -120,6 +124,7 @@ bool CombatManager::AllOutAttackEnemy()
 	for (auto unit_type : BSB_TerranUnitCategories::MAIN_ARMY_UNITS()) {
 		next_army_batch = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
 		army.insert(army.end(), next_army_batch.begin(), next_army_batch.end());
+		std::cout << "ARMY SIZE:" << army.size() << "\n";
 	};
 
 	// Do nothing if there's no army to command
@@ -147,11 +152,12 @@ bool CombatManager::AllOutAttackEnemy()
 				target_point = e->pos;
 			}
 		}
-		// Goto nearest enemy if its some distance from the last attack location
-		if (closest_d < 30.0f) {
+		// Update attack pos if nearest enemy is some distance from the last attack location
+		if (closest_d > 30.0f && closest_d < 100.0f) {
 			lastAllOutPos = target_point;
-			actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, lastAllOutPos);
 		}
+
+		actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, target_point);
 	}
 
 	return true;
@@ -236,9 +242,17 @@ bool CombatManager::FindEnemyBase()
 			if (closeEnemies > 5) {
 				enemyStartLocation = beg->second;
 				std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
+				foundEnemyBase = true;
 				return true;
 			}
 			
+		}
+
+		if (!beg->first->is_alive) {
+			enemyStartLocation = beg->second;
+			std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
+			foundEnemyBase = true;
+			return true;
 		}
 	}
 
