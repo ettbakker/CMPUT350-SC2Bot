@@ -130,3 +130,64 @@ void CombatManager::OnIdleMarine(const Unit* unit) {
 void CombatManager::OnIdleReaper(const Unit* unit) {
 
 }
+
+bool CombatManager::FindEnemyBase()
+{
+	static int closeEnemiesPushover;
+	static int printer;
+	const GameInfo& game_info = observation->GetGameInfo();
+	Point2D p;
+	if (enemyStartLocation != p) {
+		for (auto beg = begin(scoutingMarines); beg != end(scoutingMarines); ++beg) {
+			Point2D newPoint = bases[bases.size() - 1]->origin;
+			newPoint = Point2D(newPoint.x + GetRandomScalar() * 15.0f, newPoint.y + GetRandomScalar() * 15.0f);
+			actions->UnitCommand(beg->first, ABILITY_ID::ATTACK_ATTACK, newPoint);
+		}
+		scoutingMarines.clear();
+		return true;
+	}
+	//    for (auto unit : units) {
+
+	//If there are less marines currently scouting than there are possible enemy locations.
+	//Send more marines to scout.
+	if (scoutingMarines.size() < game_info.enemy_start_locations.size()) {
+		Units marines = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_MARINE));
+		int round;
+		for (auto marine : marines) {
+			//make sure there still aren't enough scouters
+			if (scoutingMarines.size() >= game_info.enemy_start_locations.size()) {	}
+
+			//make sure that this marine is not already scouting
+			else if (scoutingMarines.find(marine) != scoutingMarines.end()) {  }
+
+			//add this marine to the scouters and send them off to attack
+			else {
+				Point2D possibleLocation = game_info.enemy_start_locations[scoutingMarines.size()];
+				scoutingMarines[marine] = possibleLocation;
+				actions->UnitCommand(marine, ABILITY_ID::ATTACK_ATTACK, possibleLocation);
+			}
+
+		}
+		
+	}
+
+	for (auto beg = begin(scoutingMarines); beg != end(scoutingMarines); ++beg) {
+		actions->UnitCommand(beg->first, ABILITY_ID::ATTACK_ATTACK, scoutingMarines[beg->first]);
+		if ((beg->first->health_max - beg->first->health) > 0) {
+			Units enemies = observation->GetUnits(Unit::Alliance::Enemy);
+			int closeEnemies = 0;
+			for (auto enemy : enemies) {
+				if (closeEnemies > 5) { break; }
+				if (Distance3D(enemy->pos, beg->first->pos) < 15) { ++closeEnemies; }
+			}
+			if (closeEnemies > 5) {
+				enemyStartLocation = beg->second;
+				std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
+				return true;
+			}
+			
+		}
+	}
+
+	return false;
+}
