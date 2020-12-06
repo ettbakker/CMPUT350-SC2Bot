@@ -3,6 +3,7 @@
 #include "BoundingBox.h"
 #include "Manager.h"
 #include "Command.h"
+#include "EconomyManager.h"
 
 #define DEFAULT_BUILD_RADIUS 15.0
 
@@ -13,6 +14,7 @@ using namespace sc2;
 class ProductionManager : public Manager {
 public:
 	ProductionManager();
+	~ProductionManager();
 
 	void BuildStructures();
 
@@ -97,4 +99,5 @@ public:
 	const Unit* FindNearestMineralPatch(Point2D start);
 
 private:
+	EconomyManager* econMngr;
 };

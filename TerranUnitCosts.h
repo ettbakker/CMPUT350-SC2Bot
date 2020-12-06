@@ -5,9 +5,6 @@
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
 #include <sc2api\sc2_unit_filters.h>
-#include "Manager.h"
-#include "ProductionManager.h"
-#include "CombatManager.h"
 #include <unordered_map>
 #include <tuple>
 
@@ -41,7 +38,8 @@ public:
 			{ UNIT_TYPEID::TERRAN_PLANETARYFORTRESS, {550, 150} },
 			{ UNIT_TYPEID::TERRAN_FUSIONCORE, {150, 150} },
 			{ UNIT_TYPEID::TERRAN_TECHLAB, {50, 25} },
-			{ UNIT_TYPEID::TERRAN_REACTOR, {50, 50} }
+			{ UNIT_TYPEID::TERRAN_REACTOR, {50, 50} },
+			{ UNIT_TYPEID::TERRAN_REFINERY, {75,0} }
 		};
 	}
 

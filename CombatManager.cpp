@@ -48,8 +48,7 @@ bool CombatManager::AttackEnemy() {
 		//If doing all out attack still check for enemies near the base
 		if (allOutAttack && defendBase) {
 			//Send a small squad to attack it
-			if (((CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > 0) && (army.size() > enemies.size()*3)) &&
-				(numEnemyAtBase < 5)) {
+			if (((CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > 0) && numEnemyAtBase < 5)) {
 				Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
 				Units marines = observation->GetUnits(Unit::Alliance::Self, filter);
 				for (size_t i = 0; (i < marines.size()); i++) {
@@ -83,7 +82,7 @@ bool CombatManager::AttackEnemy() {
 					//because our army is still small
 					//Recall to nearest command center
 					Point2D recallPoint = bases[bases.size() - 1]->origin;
-					actions->UnitCommand(army, ABILITY_ID::ATTACK, recallPoint);
+					actions->UnitCommand(army, ABILITY_ID::SMART, recallPoint);
 				}
 			}
 			
@@ -97,10 +96,9 @@ bool CombatManager::AttackEnemy() {
 bool CombatManager::AllOutAttackEnemy()
 {
 	Units army, next_army_batch, enemies = observation->GetUnits(Unit::Alliance::Enemy);
-	Units hellions = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_HELLION));
 	float closest_d = std::numeric_limits<float>::max();
 	float closest_dtoBase = std::numeric_limits<float>::max();
-	Point2D target_point = enemyStartLocation;
+	Point2D target_point = lastAllOutPos;
 	bool newTarget = false;
 	targetAtBase = nullptr;
 	defendBase = false;
@@ -117,53 +115,70 @@ bool CombatManager::AllOutAttackEnemy()
 	};
 
 	// Do nothing if there's no army to command
-	if (army.size() == 0) {
+	// Also cancels the allOutAttack if we failed.
+	if (army.size() <= 10) {
+		allOutAttack = false;
 		return false;
 	}
 
 	// If an all-out attack wasn't already called, send entire army to enemy's main base
-	if (!allOutAttack) {
+	// Wait until we have an acceptable amount of units. This is important if an attack fails and the got recalled.
+	if (!allOutAttack && (army.size() > 40)) {
 		actions->UnitCommand(army, ABILITY_ID::ATTACK, enemyStartLocation);
 		lastAllOutPos = enemyStartLocation;
 		allOutAttack = true;
 		sortAndAddSweepLocations(enemyStartLocation);
-		std::cout << "All Out Attack with army size of " << observation->GetArmyCount() << std::endl;
+		std::cout << "All Out Attack " << std::endl;
 	}
 	// If all-out attack in progress, keep targeting enemies close to enemy base until all are wiped out.
 	else {
 		// Do nothing if there's no enemies in sight
 		//And temporarily stop attack if army is small
-		//std::cout << "Have hellion count of " << hellions.size() << "\n";
-		//HellionMorph(hellions, true, lastAllOutPos);
-		if ((enemies.size() == 0) || (army.size() < 30)){
+		if ((enemies.size() == 0) || (numberTimesSinceNewTarget > 400)) {
 			//If we are near the sweep location start moving to next sweep location
 			if (sweepLocations.size() > 0) {
-				lastAllOutPos = GetRandomNearbyPoint(sweepLocations[sweepLocationCounter], 5.0);
+				//lastAllOutPos = sweepLocations[sweepLocationCounter];
+
 				if (sweepLocationCounter == 0) {
 					sweeping = true;
-					lastAllOutPos = sweepLocations[sweepLocationCounter];
-					++sweepLocationCounter;
+					lastAllOutPos = sweepLocations[sweepLocationCounter++];
 					//std::cout << "Sweeping" << std::endl;
 				}
 				else {	//Only update the sweeping location if at least 20 units have reached the sweeping location
-					size_t numReached = 0;
-					for (size_t i = 0; i < army.size(); i++) {
-						if (numReached == 30) {
-							break;
+					if (numberTimesSinceNewTarget > 300) {
+						size_t numReached = 0;
+						for (size_t i = 0; i < army.size(); i++) {
+							if (numReached == 15) {
+								break;
+							}
+							else if (Distance2D(army[i]->pos, lastAllOutPos) < 5.0) {
+								++numReached;
+							}
 						}
-						else if (Distance2D(army[i]->pos, lastAllOutPos) < 7.0) {
-							++numReached;
+						if (numReached >= 15) {
+							std::cout << "Sweep Next Location" << std::endl;
+							std::cout << "Sweep Counter: " << sweepLocationCounter << std::endl;
+							lastAllOutPos = sweepLocations[sweepLocationCounter++];
+							sweeping = true;
 						}
 					}
-					if (numReached >= 20) {
-						std::cout << "Sweep Next Location" << std::endl;
-						std::cout << "Sweep Counter: " << sweepLocationCounter << std::endl;
-						++sweepLocationCounter;
-						lastAllOutPos = sweepLocations[sweepLocationCounter];
-						sweeping = true;
+					else {
+						//Play around the location a bit before moving on to the next sweeping location
+						//Only does this if it still hasn't spotted an enemy
+						if ((++numberTimesSinceNewTarget % 50) == 0) {
+							lastAllOutPos = GetRandomNearbyPoint(sweepLocations[sweepLocationCounter - 1], 10.0);
+						}
 					}
-					
+
+
 				}
+				if (!observation->IsPathable(lastAllOutPos)) {
+					lastAllOutPos = sweepLocations[sweepLocationCounter - 1];
+				}
+				if (numberTimesSinceNewTarget > 301) {
+					numberTimesSinceNewTarget = 0;
+				}
+
 				actions->UnitCommand(army, ABILITY_ID::ATTACK, lastAllOutPos);
 			}
 			return false;
@@ -181,27 +196,36 @@ bool CombatManager::AllOutAttackEnemy()
 					defendBase = true;
 				}
 			}
-			
+
 			float d = DistanceSquared2D(e->pos, lastAllOutPos);
 			if (d < closest_d) {
 				closest_d = d;
 				target_point = e->pos;
-				newTarget = true;
+
 			}
 		}
 
-		
+
 
 		// Update attack pos if nearest enemy is some distance from the last attack location
-		if (closest_d > 25.0f && closest_d < 100.0f) {
+		if (closest_d > 15.0f && closest_d < 50.0f) {
 			lastAllOutPos = target_point;
+			newTarget = true;
 		}
 		//Only attack the target if its a new one or there's more than one. Prevents useless running around
 		//while sweeping.
-		if (newTarget && (enemies.size()>1)) {
+		if (newTarget) {
+			numberTimesSinceNewTarget = 0;
 			actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, target_point);
 		}
-		
+		else {
+			if ((++numberTimesSinceNewTarget % 50) == 0) {
+				//std::cout << "num " << numberTimesSinceNewTarget << std::endl;
+				lastAllOutPos = GetRandomNearbyPoint(lastAllOutPos, 8.0);
+			}
+			actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, lastAllOutPos);
+		}
+
 	}
 
 	return true;
@@ -241,7 +265,7 @@ void CombatManager::OnIdleMarine(const Unit* unit) {
 	}
 	//Only send marines out if we have a small army
 	if ((numberMarines >= 30) || allOutAttack) {
-		actions->UnitCommand(unit, ABILITY_ID::ATTACK_ATTACK, newPoint,true);
+		actions->UnitCommand(unit, ABILITY_ID::SMART, newPoint);
 	}
 	numberIdleMarines += 1;
 }

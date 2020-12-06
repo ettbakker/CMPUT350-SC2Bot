@@ -2,10 +2,15 @@
 
 ProductionManager::ProductionManager()
 {
-	
+	econMngr = new EconomyManager();
 }
 
+
+ProductionManager::~ProductionManager() {
+	delete econMngr;
+}
 void ProductionManager::BuildStructures() {
+	econMngr->SetObservationAndActions(observation, actions, bases, expansionLocations);
 
 	for (auto base : bases) {
 		building_point = base->origin;
@@ -26,7 +31,7 @@ void ProductionManager::BuildStructures() {
 			//TryBuildEngineeringBay();
 			TryBuildFactory();
 			TryBuildArmory();
-			//TryBuildTurrets(30.0);
+			TryBuildTurrets(30.0);
 		}
     
 		/*}
@@ -96,6 +101,9 @@ bool ProductionManager::TryBuildStructureInBase(ABILITY_ID build_ability, const 
 // Methods for verifying whether a certain structure can be built
 
 bool ProductionManager::CanBuildRefinery() {
+	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_REFINERY)) {
+		return false;
+	}
 	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 20) >= 2*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
 		return false;
 	}
@@ -103,6 +111,9 @@ bool ProductionManager::CanBuildRefinery() {
 }
 
 bool ProductionManager::CanBuildSupplyDepot() {
+	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_SUPPLYDEPOT)) {
+		return false;
+	}
 	// If we are not supply capped, don't build a supply depot.
 	if ((observation->GetFoodUsed() <= observation->GetFoodCap() - 8)) {
 		return false;
@@ -116,6 +127,9 @@ bool ProductionManager::CanBuildSupplyDepot() {
 }
 
 bool ProductionManager::CanBuildCommandCenter() {
+	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
+		return false;
+	}
 	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) > 3) {
 		return false;
 	}
@@ -126,6 +140,9 @@ bool ProductionManager::CanBuildCommandCenter() {
 }
 
 bool ProductionManager::CanBuildBarracks() {
+	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_BARRACKS)) {
+		return false;
+	}
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 1) ||
 		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 5) ||
 		((CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > 4) && (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size())) ||
@@ -137,6 +154,9 @@ bool ProductionManager::CanBuildBarracks() {
 }
 
 bool ProductionManager::CanBuildEngineeringBay() {
+	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_ENGINEERINGBAY)) {
+		return false;
+	}
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 5) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < 2) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_MARINE) < 25) ||
@@ -148,6 +168,9 @@ bool ProductionManager::CanBuildEngineeringBay() {
 }
 
 bool ProductionManager::CanBuildFactory() {
+	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_FACTORY)) {
+		return false;
+	}
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 2)||
 		(CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) < 1) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_MARINE) < 5) ||
@@ -161,6 +184,9 @@ bool ProductionManager::CanBuildFactory() {
 
 bool ProductionManager::CanBuildArmory()
 {
+	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_ARMORY)) {
+		return false;
+	}
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) < 1) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_ARMORY) >= 2) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < 2)) {
@@ -170,10 +196,16 @@ bool ProductionManager::CanBuildArmory()
 }
 
 bool ProductionManager::CanBuildBunker() {
+	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_BUNKER)) {
+		return false;
+	}
 	return true;
 }
 
 bool ProductionManager::CanBuildStarPort() {
+	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_STARPORT)) {
+		return false;
+	}
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) < 1) || 
 		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_STARPORT, building_point) >= 1)) {
 		return false;
@@ -182,6 +214,9 @@ bool ProductionManager::CanBuildStarPort() {
 }
 
 bool ProductionManager::CanBuildFusionCore() {
+	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_FUSIONCORE)) {
+		return false;
+	}
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_STARPORT) < 1) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_STARPORT) >= 1)) {
 		return false;
@@ -190,6 +225,9 @@ bool ProductionManager::CanBuildFusionCore() {
 }
 
 bool ProductionManager::CanBuildTurret() {
+	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_MISSILETURRET)) {
+		return false;
+	}
 	//Need an engineering bay to build turrets
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_ENGINEERINGBAY) < 1) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) * 2 < bases.size()) ||
