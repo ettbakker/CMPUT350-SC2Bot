@@ -2,7 +2,6 @@
 #include "sc2api/sc2_api.h"
 #include "BoundingBox.h"
 #include "Manager.h"
-#include "Command.h"
 #include "EconomyManager.h"
 
 #define DEFAULT_BUILD_RADIUS 15.0

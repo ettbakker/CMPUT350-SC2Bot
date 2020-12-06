@@ -16,7 +16,7 @@
 
 using namespace sc2;
 
-class BasicSc2Bot : public sc2::Agent {
+class SAM_Sc2Bot : public sc2::Agent {
 public:
 	virtual void OnGameStart();
 	virtual void OnStep();
@@ -24,16 +24,16 @@ public:
 	virtual void OnGameEnd();
 
 private:
+	bool AddBase();
+	void SortExpansionLocations();
+
 	// Variables
 	ProductionManager* prodMngr;
 	CombatManager* combatMngr;
-	size_t randomMarineLocation = 0;
-	bool enemySpotted = false;
+	
 	Bases bases;
-	bool AddBase();
 	std::vector<Point3D> expansionLocations;
-	void SortExpansionLocations();
-	size_t thirdBaseAttempt = 0;
+	
 	size_t step_count = 0;
 };
 

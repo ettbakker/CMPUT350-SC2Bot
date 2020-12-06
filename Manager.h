@@ -2,7 +2,6 @@
 #include "sc2api/sc2_api.h"
 #include <sc2api\sc2_unit_filters.h>
 #include "BoundingBox.h"
-#include "Command.h"
 #include "Base.h"
 
 using namespace sc2;
