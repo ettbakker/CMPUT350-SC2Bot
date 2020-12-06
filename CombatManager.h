@@ -29,6 +29,7 @@ private:
 	std::vector<Point2D> sweepLocations;
 	size_t sweepLocationCounter = 0;
 	bool sweeping = false;
+	size_t numberTimesSinceNewTarget = 0;
 	const Unit* targetAtBase = nullptr;
 	bool defendBase = false;
 	size_t numEnemyAtBase = 0;
