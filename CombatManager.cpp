@@ -48,7 +48,7 @@ bool CombatManager::AttackEnemy() {
 		//If doing all out attack still check for enemies near the base
 		if (allOutAttack && defendBase) {
 			//Send a small squad to attack it
-			if (((CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > 0) && numEnemyAtBase < 5)) {
+			if (((CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > 10) && numEnemyAtBase < 2)) {
 				Filter filter = IsUnit(UNIT_TYPEID::TERRAN_MARINE);
 				Units marines = observation->GetUnits(Unit::Alliance::Self, filter);
 				for (size_t i = 0; (i < marines.size()); i++) {
@@ -101,11 +101,11 @@ bool CombatManager::AllOutAttackEnemy()
 	Point2D target_point = lastAllOutPos;
 	bool newTarget = false;
 	targetAtBase = nullptr;
-	defendBase = false;
+	
 
-	if (!foundEnemyBase) {
+	/*if (!foundEnemyBase) {
 		return false;
-	}
+	}*/
 
 	// Get all army units
 	for (auto unit_type : TerranUnitCategories::ALL_COMBAT_UNITS()) {
@@ -123,10 +123,11 @@ bool CombatManager::AllOutAttackEnemy()
 
 	// If an all-out attack wasn't already called, send entire army to enemy's main base
 	// Wait until we have an acceptable amount of units. This is important if an attack fails and the got recalled.
-	if (!allOutAttack && (army.size() > 40)) {
+	if (!allOutAttack && (army.size() > 30)) {
 		actions->UnitCommand(army, ABILITY_ID::ATTACK, enemyStartLocation);
 		lastAllOutPos = enemyStartLocation;
 		allOutAttack = true;
+		defendBase = false;
 		sortAndAddSweepLocations(enemyStartLocation);
 		std::cout << "All Out Attack " << std::endl;
 	}
@@ -134,32 +135,32 @@ bool CombatManager::AllOutAttackEnemy()
 	else {
 		// Do nothing if there's no enemies in sight
 		//And temporarily stop attack if army is small
-		if ((enemies.size() == 0) || (numberTimesSinceNewTarget > 400)) {
+		if ((enemies.size() == 0) || (numberTimesSinceNewTarget >= 400)) {
 			//If we are near the sweep location start moving to next sweep location
-			if (sweepLocations.size() > 0) {
+			if ((sweepLocations.size() > 0) && (!defendBase)) {
 				//lastAllOutPos = sweepLocations[sweepLocationCounter];
-
 				if (sweepLocationCounter == 0) {
 					sweeping = true;
 					lastAllOutPos = sweepLocations[sweepLocationCounter++];
 					//std::cout << "Sweeping" << std::endl;
 				}
 				else {	//Only update the sweeping location if at least 20 units have reached the sweeping location
-					if (numberTimesSinceNewTarget > 300) {
+					if (numberTimesSinceNewTarget >= 400) {
 						size_t numReached = 0;
 						for (size_t i = 0; i < army.size(); i++) {
-							if (numReached == 15) {
+							if (numReached == 20) {
 								break;
 							}
 							else if (Distance2D(army[i]->pos, lastAllOutPos) < 5.0) {
 								++numReached;
 							}
 						}
-						if (numReached >= 15) {
+						if (numReached >= 20) {
 							std::cout << "Sweep Next Location" << std::endl;
-							std::cout << "Sweep Counter: " << sweepLocationCounter << std::endl;
 							lastAllOutPos = sweepLocations[sweepLocationCounter++];
+							std::cout << "Sweep Counter: " << sweepLocationCounter << std::endl;
 							sweeping = true;
+							numberTimesSinceNewTarget = 0;
 						}
 					}
 					else {
@@ -169,21 +170,38 @@ bool CombatManager::AllOutAttackEnemy()
 							lastAllOutPos = GetRandomNearbyPoint(sweepLocations[sweepLocationCounter - 1], 10.0);
 						}
 					}
-
-
 				}
 				if (!observation->IsPathable(lastAllOutPos)) {
 					lastAllOutPos = sweepLocations[sweepLocationCounter - 1];
 				}
-				if (numberTimesSinceNewTarget > 301) {
-					numberTimesSinceNewTarget = 0;
+				
+				if ((numberTimesSinceNewTarget % 50) == 0) {
+					//If we've swepped 4 locations and still haven't found anything start sending reapers back to random points
+					if (sweepLocationCounter >= 4) {
+						Units reapers = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_REAPER));
+						for(size_t i=0; i< reapers.size(); i++) {
+							actions->UnitCommand(reapers[i], ABILITY_ID::ATTACK, 
+								GetRandomNearbyPoint(sweepLocations[rand() % sweepLocationCounter], 15.0),true);
+						}
+						army.clear();
+						for (auto unit_type : TerranUnitCategories::ALL_COMBAT_UNITS()) {
+							if (unit_type != UNIT_TYPEID::TERRAN_REAPER) {
+								next_army_batch = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
+								army.insert(army.end(), next_army_batch.begin(), next_army_batch.end());
+							}
+						};
+						actions->UnitCommand(army, ABILITY_ID::ATTACK, lastAllOutPos);
+					}
+					else { //Else just keep sweeping
+						actions->UnitCommand(army, ABILITY_ID::ATTACK, lastAllOutPos);
+					}
 				}
-
-				actions->UnitCommand(army, ABILITY_ID::ATTACK, lastAllOutPos);
+				
 			}
 			return false;
 		}
 
+		defendBase = false;
 		numEnemyAtBase = 0;
 		for (auto e : enemies) {
 			//Check for targets near the base at the same time so that attackEnemy can take care of them
@@ -205,6 +223,9 @@ bool CombatManager::AllOutAttackEnemy()
 			}
 		}
 
+		if (numEnemyAtBase > 5) {
+			target_point = targetAtBase->pos;
+		}
 
 
 		// Update attack pos if nearest enemy is some distance from the last attack location
@@ -324,8 +345,8 @@ bool CombatManager::FindEnemyBase()
 				if (Distance3D(enemy->pos, beg->first->pos) < 15) { ++closeEnemies; }
 			}
 			if (closeEnemies > 5) {
-				enemyStartLocation = beg->second;
-				//enemyStartLocation = game_info.enemy_start_locations[0];
+				//enemyStartLocation = beg->second;
+				enemyStartLocation = game_info.enemy_start_locations[0];
 				std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
 				foundEnemyBase = true;
 				return true;
@@ -334,8 +355,8 @@ bool CombatManager::FindEnemyBase()
 		}
 
 		if (!beg->first->is_alive) {
-			enemyStartLocation = beg->second;
-			//enemyStartLocation = game_info.enemy_start_locations[0];
+			//enemyStartLocation = beg->second;
+			enemyStartLocation = game_info.enemy_start_locations[0];
 			std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
 			foundEnemyBase = true;
 			return true;
