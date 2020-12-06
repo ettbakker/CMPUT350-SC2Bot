@@ -92,5 +92,9 @@ public:
 
 	bool fixBuildings();
 
+	const Unit* FindNearestBuildableGeyser(Point2D start);
+
+	const Unit* FindNearestMineralPatch(Point2D start);
+
 private:
 };

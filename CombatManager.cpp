@@ -7,6 +7,7 @@ CombatManager::CombatManager()
 
 bool CombatManager::AttackEnemy() {
 	Units enemies = observation->GetUnits(Unit::Alliance::Enemy);
+	Units hellbats = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_HELLIONTANK));
 	const GameInfo& game_info = observation->GetGameInfo();
 	float distance = std::numeric_limits<float>::max();
 	Units army, next_army_batch;
@@ -63,6 +64,7 @@ bool CombatManager::AttackEnemy() {
 			}//Send all army units to defend the base because they are overwhelming us
 			else {
 				if (targetAtBase != nullptr) {
+					HellionMorph(hellbats, false, targetAtBase->pos);
 					actions->UnitCommand(army, ABILITY_ID::ATTACK, targetAtBase);
 				}
 			}
@@ -74,14 +76,14 @@ bool CombatManager::AttackEnemy() {
 					actions->UnitCommand(army, ABILITY_ID::ATTACK, targetAtBase);
 				}
 				else if ((army.size() > 130)) {
-					actions->UnitCommand(army, ABILITY_ID::ATTACK, targetAtBase, true);
+					actions->UnitCommand(army, ABILITY_ID::ATTACK, targetAtBase);
 				}
 				else {
 					//If there is a targetAtBase and they are far away, call back all units so they don't keep chasing it
 					//because our army is still small
 					//Recall to nearest command center
 					Point2D recallPoint = bases[bases.size() - 1]->origin;
-					actions->UnitCommand(army, ABILITY_ID::ATTACK, recallPoint, true);
+					actions->UnitCommand(army, ABILITY_ID::ATTACK, recallPoint);
 				}
 			}
 			
@@ -95,6 +97,7 @@ bool CombatManager::AttackEnemy() {
 bool CombatManager::AllOutAttackEnemy()
 {
 	Units army, next_army_batch, enemies = observation->GetUnits(Unit::Alliance::Enemy);
+	Units hellions = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_HELLION));
 	float closest_d = std::numeric_limits<float>::max();
 	float closest_dtoBase = std::numeric_limits<float>::max();
 	Point2D target_point = enemyStartLocation;
@@ -120,16 +123,18 @@ bool CombatManager::AllOutAttackEnemy()
 
 	// If an all-out attack wasn't already called, send entire army to enemy's main base
 	if (!allOutAttack) {
-		actions->UnitCommand(army, ABILITY_ID::ATTACK, enemyStartLocation);
+		actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, enemyStartLocation);
 		lastAllOutPos = enemyStartLocation;
 		allOutAttack = true;
 		sortAndAddSweepLocations(enemyStartLocation);
-		std::cout << "All Out Attack " << std::endl;
+		std::cout << "All Out Attack with army size of " << observation->GetArmyCount() << std::endl;
 	}
 	// If all-out attack in progress, keep targeting enemies close to enemy base until all are wiped out.
 	else {
 		// Do nothing if there's no enemies in sight
 		//And temporarily stop attack if army is small
+		//std::cout << "Have hellion count of " << hellions.size() << "\n";
+		//HellionMorph(hellions, true, lastAllOutPos);
 		if ((enemies.size() == 0) || (army.size() < 30)){
 			//If we are near the sweep location start moving to next sweep location
 			if (sweepLocations.size() > 0) {
@@ -159,7 +164,7 @@ bool CombatManager::AllOutAttackEnemy()
 					}
 					
 				}
-				actions->UnitCommand(army, ABILITY_ID::ATTACK, lastAllOutPos);
+				actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, lastAllOutPos);
 			}
 			return false;
 		}
@@ -347,6 +352,26 @@ void CombatManager::sortAndAddSweepLocations(Point2D fromPoint) {
 		}
 		if (!stillSwapping) {
 			break;
+		}
+	}
+}
+
+void CombatManager::HellionMorph(const Units units, bool attacking, Point2D to) {
+	if (!units.empty()) {
+		float distanceAway = Distance2D(units.back()->pos, to);
+		for (const auto& hellion : units) {
+			// if attacking, transform to Hellbat and attack target
+			if (attacking) {
+				if (distanceAway < 65 && (CountUnitType(UNIT_TYPEID::TERRAN_ARMORY) != 0)) {
+					actions->UnitCommand(hellion, ABILITY_ID::MORPH_HELLBAT);
+				}
+				//actions->UnitCommand(hellion, ABILITY_ID::ATTACK_ATTACK, to);
+			}
+			// if retreating, transform to Hellion and move to location
+			else {
+				actions->UnitCommand(hellion, ABILITY_ID::MORPH_HELLION);
+				//actions->UnitCommand(hellion, ABILITY_ID::SMART, to);
+			}
 		}
 	}
 }

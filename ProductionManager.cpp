@@ -23,10 +23,10 @@ void ProductionManager::BuildStructures() {
 			TryBuildSupplyDepot();
 			TryBuildRefinery();
 			TryBuildBarracks();
-			TryBuildEngineeringBay();
+			//TryBuildEngineeringBay();
 			TryBuildFactory();
 			TryBuildArmory();
-			TryBuildTurrets(30.0);
+			//TryBuildTurrets(30.0);
 		}
     
 		/*}
@@ -96,7 +96,7 @@ bool ProductionManager::TryBuildStructureInBase(ABILITY_ID build_ability, const 
 // Methods for verifying whether a certain structure can be built
 
 bool ProductionManager::CanBuildRefinery() {
-	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 100) >= 1*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
+	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 20) >= 2*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
 		return false;
 	}
 	return true;
@@ -104,8 +104,7 @@ bool ProductionManager::CanBuildRefinery() {
 
 bool ProductionManager::CanBuildSupplyDepot() {
 	// If we are not supply capped, don't build a supply depot.
-	if ((observation->GetFoodUsed() <= observation->GetFoodCap() - 20) &&
-		(CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 3)) {
+	if ((observation->GetFoodUsed() <= observation->GetFoodCap() - 8)) {
 		return false;
 	}
 	/*if ((CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_SUPPLYDEPOT, building_point) >= (10*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER))) ||
@@ -210,7 +209,7 @@ bool ProductionManager::TryBuildRefinery(const Unit* target_geyser) {
 
 	//Need to find position of vespene gas
 	if (target_geyser == nullptr) {
-		target_geyser = GetBestNearestUnit(building_point, UNIT_TYPEID::NEUTRAL_VESPENEGEYSER);
+		target_geyser = FindNearestBuildableGeyser(building_point);
 		//std::cout << "x= " << target_geyser->pos.x << " ,y= " << target_geyser->pos.y << std::endl;
 		//float distance = sqrtf(pow(building_point.x - target_geyser->pos.x, 2) + pow(building_point.y - target_geyser->pos.y, 2));
 		//std::cout << distance << std::endl;
@@ -391,7 +390,7 @@ void ProductionManager::OnIdleSCV(const Unit* unit) {
 			foundSomething = false;
 		}
 		else {
-			mineral_target = GetBestNearestUnit(bestCommandCenter->pos, UNIT_TYPEID::NEUTRAL_MINERALFIELD);
+			mineral_target = FindNearestMineralPatch(bestCommandCenter->pos);
 			if (!mineral_target) {
 				foundSomething = false;
 			}
@@ -456,7 +455,8 @@ void ProductionManager::OnIdleBarracks(const Unit* unit) {
 
 
 void ProductionManager::OnIdleFactory(const Unit* unit) {
-	if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_HELLION)*3 ) {
+	if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_HELLIONTANK)*3 )
+	{
 		actions->UnitCommand(unit, ABILITY_ID::TRAIN_HELLION);
 	}
 }
@@ -600,4 +600,50 @@ bool ProductionManager::fixBuildings() {
 	}
 
 	return false;
+}
+
+const Unit* ProductionManager::FindNearestBuildableGeyser(Point2D start)
+{
+	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsGeyser());
+	Units refineries = observation->GetUnits(Unit::Alliance::Self, IsGeyser());
+	float dist, closest_dist = std::numeric_limits<float>::max();
+	const Unit* target_geyser = nullptr;
+	bool is_refinery = false;
+
+	for (auto g : geysers) {
+		for (auto r : refineries) {
+			if (DistanceSquared2D(r->pos, g->pos) < 5.0) {
+				is_refinery = true;
+				break;
+			}
+		}
+
+		if (is_refinery) {
+			continue;
+		}
+
+		dist = DistanceSquared2D(g->pos, start);
+		if (dist < closest_dist) {
+			closest_dist = dist;
+			target_geyser = g;
+		}
+	}
+
+	return target_geyser;
+}
+
+const Unit* ProductionManager::FindNearestMineralPatch(Point2D start) {
+	Units patches = observation->GetUnits(Unit::Alliance::Neutral, IsMineralPatch());
+	const Unit* target_patch = nullptr;
+	float dist, closest_dist = std::numeric_limits<float>::max();
+
+	for (auto p : patches) {
+		dist = DistanceSquared2D(p->pos, start);
+		if (dist < closest_dist) {
+			closest_dist = dist;
+			target_patch = p;
+		}
+	}
+
+	return target_patch;
 }
