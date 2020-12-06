@@ -57,69 +57,73 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 
 	switch (unit->unit_type.ToType()) {
 		// buildings
-		case UNIT_TYPEID::TERRAN_COMMANDCENTER:
-		{
+		case UNIT_TYPEID::TERRAN_COMMANDCENTER: {
 			prodMngr->OnIdleCommandCenter(unit); 
 			break;
 		}
 
-		case UNIT_TYPEID::TERRAN_BARRACKS:
-		{
+		case UNIT_TYPEID::TERRAN_BARRACKS: {
 			prodMngr->OnIdleBarracks(unit);  break;
 		}
 
-		case UNIT_TYPEID::TERRAN_FACTORY:
-		{
+		case UNIT_TYPEID::TERRAN_FACTORY: {
 			prodMngr->OnIdleFactory(unit); break;
 		}
 
-		case UNIT_TYPEID::TERRAN_ENGINEERINGBAY:
-		{
+		case UNIT_TYPEID::TERRAN_ENGINEERINGBAY: {
 			prodMngr->OnIdleEngineeringBay(unit);  break;
 		}
 
-		case UNIT_TYPEID::TERRAN_ARMORY:
-		{
+		case UNIT_TYPEID::TERRAN_ARMORY: {
 			prodMngr->OnIdleArmory(unit); break;
 		}
 
-		case UNIT_TYPEID::TERRAN_ORBITALCOMMAND:
-		{
+		case UNIT_TYPEID::TERRAN_ORBITALCOMMAND: {
 			prodMngr->OnIdleOrbitalCommand(unit);  break;
 		}
 
 		// units
-		case UNIT_TYPEID::TERRAN_SCV:
-		{
-			
-			prodMngr->OnIdleSCV(unit);
-			
-			break;
+		case UNIT_TYPEID::TERRAN_SCV: {
+			prodMngr->OnIdleSCV(unit);	break;
 		}
 
-		case UNIT_TYPEID::TERRAN_MARINE:
-		{
+		case UNIT_TYPEID::TERRAN_MARINE: {
 			combatMngr->OnIdleMarine(unit); break;
 		}
 
-		case UNIT_TYPEID::TERRAN_REAPER:
-		{
+		case UNIT_TYPEID::TERRAN_REAPER: {
 			combatMngr->OnIdleReaper(unit); break;
 		}
 
-		case UNIT_TYPEID::TERRAN_MULE:
-		{
+		case UNIT_TYPEID::TERRAN_MARAUDER: {
+			combatMngr->OnIdleMarauder(unit); break;
+		}
+
+		case UNIT_TYPEID::TERRAN_HELLION: {
+			combatMngr->OnIdleHellion(unit); break;
+		}
+
+		case UNIT_TYPEID::TERRAN_HELLIONTANK: {
+			combatMngr->OnIdleHellion(unit); break;
+		}
+
+		case UNIT_TYPEID::TERRAN_SIEGETANK: {
+			combatMngr->OnIdleSeigeTank(unit); break;
+		}
+
+		case UNIT_TYPEID::TERRAN_SIEGETANKSIEGED: {
+			combatMngr->OnIdleSeigeTank(unit); break;
+		}
+
+		case UNIT_TYPEID::TERRAN_MULE: {
 			prodMngr->OnIdleSCV(unit); break;
 		}
 
-		default:
-		{
+		default: {
 			break;
 		}
 	}
 }
-
-
 
 //Sort the expansion location in order of closest to main base
 //Simple bubble sort
@@ -169,6 +173,12 @@ bool BasicSc2Bot::AddBase() {
 			return true;
 		}
 	}
+	else {
+		Point2D base1 = bases[bases.size() - 1]->origin;
+		Point2D base2 = bases[bases.size() - 2]->origin;
+		combatMngr->halfway = Point2D((base1.x + base2.x) / 2, (base1.y + base2.y) / 2);
+	}
+
 	return false;
 }
 
