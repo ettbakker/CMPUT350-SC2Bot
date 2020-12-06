@@ -91,30 +91,6 @@ void BasicSc2Bot::OnUnitIdle(const Unit* unit)
 			combatMngr->OnIdleMarine(unit); break;
 		}
 
-		case UNIT_TYPEID::TERRAN_REAPER: {
-			combatMngr->OnIdleReaper(unit); break;
-		}
-
-		case UNIT_TYPEID::TERRAN_MARAUDER: {
-			combatMngr->OnIdleMarauder(unit); break;
-		}
-
-		case UNIT_TYPEID::TERRAN_HELLION: {
-			combatMngr->OnIdleHellion(unit); break;
-		}
-
-		case UNIT_TYPEID::TERRAN_HELLIONTANK: {
-			combatMngr->OnIdleHellion(unit); break;
-		}
-
-		case UNIT_TYPEID::TERRAN_SIEGETANK: {
-			combatMngr->OnIdleSeigeTank(unit); break;
-		}
-
-		case UNIT_TYPEID::TERRAN_SIEGETANKSIEGED: {
-			combatMngr->OnIdleSeigeTank(unit); break;
-		}
-
 		case UNIT_TYPEID::TERRAN_MULE: {
 			prodMngr->OnIdleSCV(unit); break;
 		}
@@ -176,7 +152,7 @@ bool BasicSc2Bot::AddBase() {
 	else {
 		Point2D base1 = bases[bases.size() - 1]->origin;
 		Point2D base2 = bases[bases.size() - 2]->origin;
-		combatMngr->halfway = Point2D((base1.x + base2.x) / 2, (base1.y + base2.y) / 2);
+		//combatMngr->halfway = Point2D((base1.x + base2.x) / 2, (base1.y + base2.y) / 2);
 	}
 
 	return false;

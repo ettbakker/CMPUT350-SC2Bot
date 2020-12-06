@@ -19,6 +19,9 @@ public:
 	void OnIdleReaper(const Unit* unit);
 	bool FindEnemyBase();
 	void sortAndAddSweepLocations(Point2D fromPoint);
+
+	void HellionMorph(const Units units, bool attacking, Point2D to);
+
 	
 private:
 	size_t numberIdleMarines = 0;
