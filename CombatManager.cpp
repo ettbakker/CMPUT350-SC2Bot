@@ -128,7 +128,13 @@ bool CombatManager::AllOutAttackEnemy()
 		lastAllOutPos = enemyStartLocation;
 		allOutAttack = true;
 		defendBase = false;
-		sortAndAddSweepLocations(enemyStartLocation);
+		Point2D p;
+		if (enemyStartLocation != p) {
+			sortAndAddSweepLocations(enemyStartLocation);
+		}
+		else {
+			sortAndAddSweepLocations(GetStartPoint());
+		}
 		std::cout << "All Out Attack " << std::endl;
 	}
 	// If all-out attack in progress, keep targeting enemies close to enemy base until all are wiped out.
@@ -142,6 +148,8 @@ bool CombatManager::AllOutAttackEnemy()
 				if (sweepLocationCounter == 0) {
 					sweeping = true;
 					lastAllOutPos = sweepLocations[sweepLocationCounter++];
+					actions->UnitCommand(army, ABILITY_ID::ATTACK, lastAllOutPos);
+					return false;
 					//std::cout << "Sweeping" << std::endl;
 				}
 				else {	//Only update the sweeping location if at least 20 units have reached the sweeping location
@@ -161,6 +169,8 @@ bool CombatManager::AllOutAttackEnemy()
 							std::cout << "Sweep Counter: " << sweepLocationCounter << std::endl;
 							sweeping = true;
 							numberTimesSinceNewTarget = 0;
+							actions->UnitCommand(army, ABILITY_ID::ATTACK, lastAllOutPos);
+							return false;
 						}
 					}
 					else {
@@ -175,7 +185,7 @@ bool CombatManager::AllOutAttackEnemy()
 					lastAllOutPos = sweepLocations[sweepLocationCounter - 1];
 				}
 				
-				if ((numberTimesSinceNewTarget % 50) == 0) {
+				if ((numberTimesSinceNewTarget % 25) == 0) {
 					//If we've swepped 4 locations and still haven't found anything start sending reapers back to random points
 					if (sweepLocationCounter >= 4) {
 						Units reapers = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_REAPER));
@@ -197,6 +207,9 @@ bool CombatManager::AllOutAttackEnemy()
 					}
 				}
 				
+			}
+			else if (enemies.size() == 0) {
+				defendBase = false;
 			}
 			return false;
 		}
@@ -345,8 +358,8 @@ bool CombatManager::FindEnemyBase()
 				if (Distance3D(enemy->pos, beg->first->pos) < 15) { ++closeEnemies; }
 			}
 			if (closeEnemies > 5) {
-				//enemyStartLocation = beg->second;
-				enemyStartLocation = game_info.enemy_start_locations[0];
+				enemyStartLocation = beg->second;
+				//enemyStartLocation = game_info.enemy_start_locations[0];
 				std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
 				foundEnemyBase = true;
 				return true;
@@ -355,8 +368,8 @@ bool CombatManager::FindEnemyBase()
 		}
 
 		if (!beg->first->is_alive) {
-			//enemyStartLocation = beg->second;
-			enemyStartLocation = game_info.enemy_start_locations[0];
+			enemyStartLocation = beg->second;
+			//enemyStartLocation = game_info.enemy_start_locations[0];
 			std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
 			foundEnemyBase = true;
 			return true;
