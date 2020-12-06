@@ -1,9 +1,12 @@
 #pragma once
 #include "sc2api/sc2_api.h"
+#include "TerranUnitCategories.h"
 #include <sc2api\sc2_unit_filters.h>
 #include "BoundingBox.h"
 #include "Command.h"
 #include "Base.h"
+#include <algorithm>
+
 
 using namespace sc2;
 

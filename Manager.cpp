@@ -1,4 +1,5 @@
 #include "Manager.h"
+#include "D:/Documents/TerranUnitCategories.h"
 
 size_t Manager::CountUnitType(UNIT_TYPEID unit_type)
 {
@@ -44,6 +45,7 @@ const Unit* Manager::GetBestNearestUnit(const Point2D& point, UNIT_TYPEID unit_t
 	Units units = observation->GetUnits(alliance);
 	float distance = std::numeric_limits<float>::max();
 	const Unit* target = nullptr;
+	std::list<UNIT_TYPEID> vesp_gas_types = NeutralResourceUnitTypes::VESPENE_GEYSERS();
 	for (const auto& u : units)
 	{
 		if (u->unit_type == unit_type)
@@ -64,7 +66,7 @@ const Unit* Manager::GetBestNearestUnit(const Point2D& point, UNIT_TYPEID unit_t
 				}
 			}
 
-			if (unit_type == UNIT_TYPEID::NEUTRAL_VESPENEGEYSER) {
+			if (std::find(vesp_gas_types.begin(), vesp_gas_types.end(), u->unit_type) != vesp_gas_types.end()) {
 				//When trying to build on a geyser find out if a refinrey is already build on it by getting the distance to refineries
 				Units refineries = observation->GetUnits(Unit::Alliance::Self, IsVisibleGeyser());
 				bool already = false;

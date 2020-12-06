@@ -124,7 +124,6 @@ bool CombatManager::AllOutAttackEnemy()
 	for (auto unit_type : BSB_TerranUnitCategories::MAIN_ARMY_UNITS()) {
 		next_army_batch = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
 		army.insert(army.end(), next_army_batch.begin(), next_army_batch.end());
-		std::cout << "ARMY SIZE:" << army.size() << "\n";
 	};
 
 	// Do nothing if there's no army to command
@@ -142,6 +141,7 @@ bool CombatManager::AllOutAttackEnemy()
 	else {
 		// Do nothing if there's no enemies in sight
 		if (enemies.size() == 0) {
+			allOutAttack = false;
 			return false;
 		}
 

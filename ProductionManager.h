@@ -3,6 +3,7 @@
 #include "BoundingBox.h"
 #include "Manager.h"
 #include "Command.h"
+#include "EconomyManager.h"
 
 #define DEFAULT_BUILD_RADIUS 15.0
 
@@ -13,6 +14,7 @@ using namespace sc2;
 class ProductionManager : public Manager {
 public:
 	ProductionManager();
+	~ProductionManager();
 
 	void BuildStructures();
 
@@ -23,6 +25,8 @@ public:
 
 	// Build Refinery Methods
 	bool CanBuildRefinery();
+	const Unit* FindNearestBuildableGeyser(Point2D start);
+	const Unit* FindNearestMineralPatch(Point2D start);
 	bool TryBuildRefinery(const Unit* target_geyser = nullptr);
 
 	// Build Supply Depot Methods
@@ -93,4 +97,5 @@ public:
 	bool fixBuildings();
 
 private:
+	EconomyManager *econMngr = nullptr;
 };
