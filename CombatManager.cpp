@@ -123,7 +123,7 @@ bool CombatManager::AllOutAttackEnemy()
 
 	// If an all-out attack wasn't already called, send entire army to enemy's main base
 	if (!allOutAttack) {
-		actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, enemyStartLocation);
+		actions->UnitCommand(army, ABILITY_ID::ATTACK, enemyStartLocation);
 		lastAllOutPos = enemyStartLocation;
 		allOutAttack = true;
 		sortAndAddSweepLocations(enemyStartLocation);
@@ -164,7 +164,7 @@ bool CombatManager::AllOutAttackEnemy()
 					}
 					
 				}
-				actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, lastAllOutPos);
+				actions->UnitCommand(army, ABILITY_ID::ATTACK, lastAllOutPos);
 			}
 			return false;
 		}
