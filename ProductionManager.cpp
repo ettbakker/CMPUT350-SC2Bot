@@ -86,7 +86,7 @@ bool ProductionManager::CanBuildRefinery() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_REFINERY)) {
 		return false;
 	}
-	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 20) >= 2*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
+	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 10) >= 2*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
 		return false;
 	}
 	return true;
@@ -604,13 +604,14 @@ const Unit* ProductionManager::GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYP
 const Unit* ProductionManager::FindNearestBuildableGeyser(Point2D start)
 {
 	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsGeyser());
-	Units refineries = observation->GetUnits(Unit::Alliance::Self, IsGeyser());
+	Units refineries = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_REFINERY));
 	float dist, closest_dist = std::numeric_limits<float>::max();
 	const Unit* target_geyser = nullptr;
 	bool is_refinery = false;
 
 	for (auto g : geysers) {
-		for (auto r : refineries) {
+		is_refinery = false;
+		for (auto r : refineries) {	
 			if (DistanceSquared2D(r->pos, g->pos) < 5.0) {
 				is_refinery = true;
 				break;
