@@ -4,6 +4,14 @@
 
 using namespace sc2;
 
+/**
+* This class defines a bounding box that encloses a rectangular region of the in-game map.
+* The box is defined by its top-left corner (the point p) as well as its width and height.
+* 
+* Since our bot currently builds units in locations near points representing our bases instead
+* of within a region, this class has gone unused. It was intended to represent the region defined
+* by a base and its associated structures.
+*/
 
 struct BoundingBox {
 	BoundingBox() { }
@@ -15,6 +23,7 @@ struct BoundingBox {
 		h = bottom_right.y - top_left.y;
 	}
 
+	// Return a random point within the bounding box.
 	Point2D RandPoint() const {
 		float half_w = 0.5 * w,
 			half_h = 0.5 * h,

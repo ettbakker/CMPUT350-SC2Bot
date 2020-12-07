@@ -10,6 +10,12 @@
 
 using namespace sc2;
 
+/**
+* This file includes classes and types for managing the overall economy of the bot, namely tracking the costs of
+* building/training/upgrading units. UNIT_TYPEIDs can be supplied to their relevant classes to obtain tuples 
+* representing the build/train/upgrade operation's cost in minerals and gas (and supply where applicable).
+*/
+
 enum COST { MINERALS = 0, GAS = 1, SUPPLY = 2 };
 
 typedef std::tuple<size_t, size_t, size_t> UnitCostTuple;
@@ -22,6 +28,7 @@ public:
 	typedef std::unordered_map<UNIT_TYPEID, BuildingCostTuple> BuildingCostMap;
 	typedef std::unordered_map<UPGRADE_ID, UpgradeCostTuple> UpgradeCostMap;
 
+	// Returns a map of building types to their cost in minerals and gas.
 	static const BuildingCostMap BUILDINGS() {
 		return { { UNIT_TYPEID::TERRAN_COMMANDCENTER, {400, 0} },
 			{ UNIT_TYPEID::TERRAN_SUPPLYDEPOT, {100, 0} },
@@ -43,12 +50,15 @@ public:
 		};
 	}
 
+	// Returns a map of upgrade types to their cost in minerals and gas.
+	// Currently unused.
 	static const UpgradeCostMap UPGRADES() {
 		return {
 
 		};
 	}
 
+	// Returns a map to the cost of units in minerals, gas, and supply.
 	static const UnitCostMap UNITS() {
 		return { { UNIT_TYPEID::TERRAN_SCV, {50, 0, 1} },
 			{ UNIT_TYPEID::TERRAN_MARINE, {50, 0, 1} },

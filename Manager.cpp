@@ -5,7 +5,6 @@ size_t Manager::CountUnitType(UNIT_TYPEID unit_type)
 	return observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type)).size();
 }
 
-//Count the number of units within a specific radius of a point
 size_t Manager::CountUnitTypeFromPoint(UNIT_TYPEID unit_type, Point2D point, int search_radius)
 {
 	size_t number = 0;
@@ -49,7 +48,7 @@ Point2D Manager::GetRandomNearbyPoint(Point2D start_point, float distance)
 	return Point2D(start_point.x + rx * distance, start_point.y + ry * distance);
 }
 
-void Manager::SetObservationAndActions(const ObservationInterface* obs, ActionInterface* act, Bases& b, std::vector<Point3D> expLocations) {
+void Manager::SetGameStateVars(const ObservationInterface* obs, ActionInterface* act, Bases& b, std::vector<Point3D> expLocations) {
 	observation = obs;
 	actions = act;
 	bases = b;

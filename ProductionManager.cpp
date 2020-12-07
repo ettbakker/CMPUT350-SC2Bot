@@ -9,11 +9,8 @@ ProductionManager::~ProductionManager() {
 	delete econMngr;
 }
 
-// Intended to be called during each OnStep() call in the main bot class.
-// For each base, try to build a small subset of Terran structures.
-// Engineering bays and turrets are currently disabled to focus resources elsewhere.
 void ProductionManager::BuildStructures() {
-	econMngr->SetObservationAndActions(observation, actions, bases, expansionLocations);
+	econMngr->SetGameStateVars(observation, actions, bases, expansionLocations);
 
 	for (auto base : bases) {
 		building_point = base->origin;
@@ -39,7 +36,6 @@ void ProductionManager::BuildStructures() {
 
 // Generic Build Structure Methods
 
-// Build a given structure within a radius of a point. Returns true if build command is successful.
 bool ProductionManager::TryBuildStructureNearPoint(ABILITY_ID build_ability, Point2D point, float build_radius, const Unit* builder_unit) {
 	Point2D near_point;
 	bool is_valid_point = false;
@@ -67,12 +63,10 @@ bool ProductionManager::TryBuildStructureNearPoint(ABILITY_ID build_ability, Poi
 	return true;
 }
 
-// Build a given structure in a random point within a bounding box. Returns true if build command is successful.
 bool ProductionManager::TryBuildStructureInBox(ABILITY_ID build_ability, const BoundingBox& box, const Unit* builder_unit) {
 	return ProductionManager::TryBuildStructureNearPoint(build_ability, box.RandPoint(), 0.0, builder_unit);
 }
 
-// Build a given structure on top of a unit, returning true if build command succeeds. Only used when building refineries.
 bool ProductionManager::TryBuildStructureAtUnit(ABILITY_ID build_ability, const Unit* target_unit, const Unit* builder_unit) {
 	if (builder_unit == nullptr) {
 		builder_unit = GetBuilderUnit(build_ability);
@@ -87,9 +81,7 @@ bool ProductionManager::TryBuildStructureAtUnit(ABILITY_ID build_ability, const 
 }
 
 // Methods for verifying whether a certain structure can be built.
-// Each includes a resource check to see if enough minerals/gas are available at the moment.
 
-// Returns true if we don't already have 2 refineries per command center.
 bool ProductionManager::CanBuildRefinery() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_REFINERY)) {
 		return false;
@@ -100,7 +92,7 @@ bool ProductionManager::CanBuildRefinery() {
 	return true;
 }
 
-// Returns true if we are within 8 units of the supply cap.
+
 bool ProductionManager::CanBuildSupplyDepot() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_SUPPLYDEPOT)) {
 		return false;
@@ -113,7 +105,6 @@ bool ProductionManager::CanBuildSupplyDepot() {
 	return true;
 }
 
-// Returns true if we have less than 3 command centers and we have at least 10 marines.
 bool ProductionManager::CanBuildCommandCenter() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
 		return false;
@@ -127,11 +118,6 @@ bool ProductionManager::CanBuildCommandCenter() {
 	return true;
 }
 
-// Returns true if:
-//	1. There are no more than 5 barracks near a base to force building at other bases.
-//	2. If more than 4 barracks exist, only build a new one if we have 1 command center per base.
-//	3. There are no more than 3 barracks per base.
-//	4. If we have 2 barracks, postpone any more until a factory is built.
 bool ProductionManager::CanBuildBarracks() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_BARRACKS)) {
 		return false;
@@ -145,10 +131,6 @@ bool ProductionManager::CanBuildBarracks() {
 	return true;
 }
 
-// Returns true if:
-//	1. We have at least 2 command centers, meaning 1 complete expansion from the home base.
-//	2. We have at least 25 army units.
-//	3. We don't already have an engineering bay.
 bool ProductionManager::CanBuildEngineeringBay() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_ENGINEERINGBAY)) {
 		return false;
@@ -162,11 +144,6 @@ bool ProductionManager::CanBuildEngineeringBay() {
 	return true;
 }
 
-// Returns true if:
-//	1. We have at least 1 barracks to satisfy the tech tree
-//	2. We have at least 5 marines already.
-//	3. We have no more than 2 factories per base.
-//
 bool ProductionManager::CanBuildFactory() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_FACTORY)) {
 		return false;
@@ -180,10 +157,6 @@ bool ProductionManager::CanBuildFactory() {
 	return true;
 }
 
-// Returns true if:
-//	1. We have at least 1 factory to satisfy the tech tree.
-//	2. We have no more than 1 armory.
-//	3. We have at least 2 command centers (i.e. 1 successful expansion)
 bool ProductionManager::CanBuildArmory()
 {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_ARMORY)) {
@@ -197,7 +170,7 @@ bool ProductionManager::CanBuildArmory()
 	return true;
 }
 
-// Returns true if we can afford to build a bunker.
+
 bool ProductionManager::CanBuildBunker() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_BUNKER)) {
 		return false;
@@ -205,9 +178,7 @@ bool ProductionManager::CanBuildBunker() {
 	return true;
 }
 
-// Returns true if:
-//	1. We have at least 1 factory to satisfy the tech tree.
-//	2. We have no more than 1 starport within range of the base.
+
 bool ProductionManager::CanBuildStarPort() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_STARPORT)) {
 		return false;
@@ -219,7 +190,6 @@ bool ProductionManager::CanBuildStarPort() {
 	return true;
 }
 
-// Returns true if we have a starport to satisfy the tech tree.
 bool ProductionManager::CanBuildFusionCore() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_FUSIONCORE)) {
 		return false;
@@ -230,10 +200,6 @@ bool ProductionManager::CanBuildFusionCore() {
 	return true;
 }
 
-//Returns true if:
-//	1. We have at least 1 engineering bay to satisfy the tech tree.
-//	2. We have no more than 5 turrets near the building point (i.e. base).
-//	3. We are attempting to build the turret near an expansion, not the home base.
 bool ProductionManager::CanBuildTurret() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_MISSILETURRET)) {
 		return false;
@@ -249,7 +215,6 @@ bool ProductionManager::CanBuildTurret() {
 
 // Build Methods for each Terran structure
 
-// If a refinery can be built, find a nearby free geyser and build on it.
 bool ProductionManager::TryBuildRefinery(const Unit* target_geyser) {
 	if (!CanBuildRefinery()) {
 		return false;
@@ -265,8 +230,6 @@ bool ProductionManager::TryBuildRefinery(const Unit* target_geyser) {
 
 	return TryBuildStructureAtUnit(ABILITY_ID::BUILD_REFINERY, target_geyser);
 }
-
-
 
 // Build Supply Depot Methods
 bool ProductionManager::TryBuildSupplyDepot(float build_radius) {
@@ -454,7 +417,6 @@ void ProductionManager::OnIdleSCV(const Unit* unit) {
 	}
 }
 
-// Command centers will try to train 22 SCVs per center (16 for minerals, 3 for each of the 2 refineries).
 void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
 
 	// Orbital command morph disabled as MULEs are not used by the bot.
@@ -471,7 +433,6 @@ void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
 
 }
 
-// When idle, barracks will train marines, reapers, and marauders (if a tech lab has been attached).
 void ProductionManager::OnIdleBarracks(const Unit* unit) {
 	//Add on tags are for different states of the barracks
 	//Known tags are 4389076993, 4383309827, 4369678348
@@ -494,7 +455,6 @@ void ProductionManager::OnIdleBarracks(const Unit* unit) {
 	actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE, true);	
 }
 
-// Factories will train 1 hellion per 3 marines we currently have.
 void ProductionManager::OnIdleFactory(const Unit* unit) {
 	if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_HELLIONTANK)*3 )
 	{
@@ -502,7 +462,6 @@ void ProductionManager::OnIdleFactory(const Unit* unit) {
 	}
 }
 
-// Engineering bays will attempt to upgrade infantry abilities up to their max level.
 void ProductionManager::OnIdleEngineeringBay(const Unit* unit) {
 
 	auto upgrades = observation->GetUpgrades();
@@ -531,7 +490,6 @@ void ProductionManager::OnIdleEngineeringBay(const Unit* unit) {
 	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYARMOR);
 }
 
-// In addition to training SCVs, MULEs will be constantly called down.
 void ProductionManager::OnIdleOrbitalCommand(const Unit* unit) {
 	
 	actions->UnitCommand(unit, ABILITY_ID::EFFECT_CALLDOWNMULE, 
@@ -544,7 +502,6 @@ void ProductionManager::OnIdleOrbitalCommand(const Unit* unit) {
 	}
 }
 
-// Try to build an add-on for a given completed structure.
 void ProductionManager::TryBuildAddOn(const Unit* unit, ABILITY_ID add_on_ability) {
 	Units units;
 
@@ -562,8 +519,7 @@ void ProductionManager::TryBuildAddOn(const Unit* unit, ABILITY_ID add_on_abilit
 	}
 }
 
-// Armories will attempt to improve vehicles with each of their 3 upgrades upto level 3.
-// Currently disabled to save resources for other tasks.
+// Currently disabled so bot can use resources for other tasks.
 void ProductionManager::OnIdleArmory(const Unit* unit) {
 	return; // Comment out to turn on armory upgrades.
 
@@ -590,8 +546,6 @@ void ProductionManager::OnIdleArmory(const Unit* unit) {
 	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEWEAPONSLEVEL1,true);
 }
 
-// For each damaged building, dispatch an SCV to repair it.
-// Unimplemented as we currently focus on attacking the enemy before repairs are relevant.
 bool ProductionManager::FixBuildings() {
 	Units units = observation->GetUnits();
 
@@ -619,15 +573,12 @@ bool ProductionManager::FixBuildings() {
 
 // Build utility methods
 
-// Return a random point within a given radius of a starting point.
 Point2D ProductionManager::GetNearbyPoint(const Point2D& start_point, float build_radius)
 {
 	return Point2D(start_point.x + (GetRandomScalar() * build_radius),
 		start_point.y + (GetRandomScalar() * build_radius));
 }
 
-// Find a builder unit to execute the given build command. If another unit is already executing
-// that build command, return nullptr instead.
 const Unit* ProductionManager::GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYPEID builder_type) {
 	const Unit* unit_to_build = nullptr;
 	Units units = observation->GetUnits(Unit::Alliance::Self);
@@ -650,7 +601,6 @@ const Unit* ProductionManager::GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYP
 	return unit_to_build;
 }
 
-// Return the nearest vespene geyser that we haven't built a refinery on.
 const Unit* ProductionManager::FindNearestBuildableGeyser(Point2D start)
 {
 	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsGeyser());
@@ -681,7 +631,6 @@ const Unit* ProductionManager::FindNearestBuildableGeyser(Point2D start)
 	return target_geyser;
 }
 
-// Return the closest mineral patch to a given starting point.
 const Unit* ProductionManager::FindNearestMineralPatch(Point2D start) {
 	Units patches = observation->GetUnits(Unit::Alliance::Neutral, IsMineralPatch());
 	const Unit* target_patch = nullptr;
@@ -698,7 +647,6 @@ const Unit* ProductionManager::FindNearestMineralPatch(Point2D start) {
 	return target_patch;
 }
 
-// 
 const Unit* ProductionManager::GetBestNearestHarvestSpot(const Point2D& point, UNIT_TYPEID unit_type, Unit::Alliance alliance)
 {
 	Units units = observation->GetUnits(alliance);

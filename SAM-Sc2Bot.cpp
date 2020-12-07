@@ -1,6 +1,5 @@
 #include "SAM_Sc2Bot.h"
 
-// Initialize managers, bases, and possible expansion locations
 void SAM_Sc2Bot::OnGameStart() 
 { 
 	prodMngr = new ProductionManager();
@@ -14,7 +13,6 @@ void SAM_Sc2Bot::OnGameStart()
 	return; 
 }
 
-// Print the results of the players and deallocate managers and bases on game over.
 void SAM_Sc2Bot::OnGameEnd() {
 	std::vector<PlayerResult> res = Observation()->GetResults();
 
@@ -30,8 +28,6 @@ void SAM_Sc2Bot::OnGameEnd() {
 	}
 }
 
-// During each in-game step, attempt to build structures and attack enemies near the home base.
-// After a certain amount of in-game time, expand our base and later attack the enemy's base.
 void SAM_Sc2Bot::OnStep()
 {
 	step_count++;
@@ -40,8 +36,8 @@ void SAM_Sc2Bot::OnStep()
 	}
 
 	// Update variables representing the game state for both managers.
-	prodMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
-	combatMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
+	prodMngr->SetGameStateVars(Observation(), Actions(), bases, expansionLocations);
+	combatMngr->SetGameStateVars(Observation(), Actions(), bases, expansionLocations);
 
 	// Try to build any needed structures according to what resources/buildings we have now.
 	prodMngr->BuildStructures();
@@ -53,28 +49,29 @@ void SAM_Sc2Bot::OnStep()
 	if ((step_count % 5000) == 0) {
 		AddBase();
 	}
+
+	// After ~8 minutes, begin gathering army near enemy base
 	if ((step_count < 11000) && (step_count > 10500)) {
 		if (step_count == 10501) {
 			combatMngr->CalculateGatherLocation();
 		}
 		combatMngr->GatherNearEnemy();
 	}
-	// After ~ 8.25 minutes, begin attacking the main enemy base.
+	// After ~8.25 minutes, begin attacking the main enemy base.
 	if (step_count >= 11000) {
 		combatMngr->AllOutAttackEnemy();
 	}
 
-	// 
+	// Attack enemies close to our base but don't pursue them past a certain distance
 	combatMngr->AttackEnemy();
 	
 }
 
-// Delegate OnIdle functions to appropriate managers.
 void SAM_Sc2Bot::OnUnitIdle(const Unit* unit)
 {
 	// Update variables representing the game state for both managers.
-	prodMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
-	combatMngr->SetObservationAndActions(Observation(), Actions(), bases, expansionLocations);
+	prodMngr->SetGameStateVars(Observation(), Actions(), bases, expansionLocations);
+	combatMngr->SetGameStateVars(Observation(), Actions(), bases, expansionLocations);
 
 	switch (unit->unit_type.ToType()) {
 		// buildings
@@ -131,7 +128,6 @@ void SAM_Sc2Bot::OnUnitIdle(const Unit* unit)
 	}
 }
 
-//Sort the expansion location in order of closest to main base using simple bubble sort
 void SAM_Sc2Bot::SortExpansionLocations() {
 	const GameInfo& game_info = Observation()->GetGameInfo();
 	Point3D tempPoint, point1, point2;
@@ -165,8 +161,6 @@ void SAM_Sc2Bot::SortExpansionLocations() {
 	}
 }
 
-// Add a new base location by choosing the next closest expansion location we haven't already used.
-// Only a maximum of 3 bases are allowed, so max 2 expansions from the home base.
 bool SAM_Sc2Bot::AddBase() {
 	
 	// Expansion locations are sorted by proximity

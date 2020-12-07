@@ -38,7 +38,6 @@ bool CombatManager::AttackEnemy() {
 		for (auto unit_type : TerranUnitCategories::ALL_COMBAT_UNITS()) {
 			next_army_batch = observation->GetUnits(Unit::Alliance::Self, IsUnit(unit_type));
 			army.insert(army.end(), next_army_batch.begin(), next_army_batch.end());
-			//std::cout << "ARMY SIZE:" << army.size() << "\n";
 		};
 
 		//If doing all out attack still check for enemies near the base
@@ -59,11 +58,13 @@ bool CombatManager::AttackEnemy() {
 			}//Send all army units to defend the base because they are overwhelming us
 			else {
 				if (targetAtBase != nullptr) {
-					HellionMorph(hellbats, false, targetAtBase->pos);
+					//HellionMorph(hellbats, false, targetAtBase->pos);
 					actions->UnitCommand(army, ABILITY_ID::ATTACK, targetAtBase);
 				}
 			}
 		}
+		// If an all-out attack hasn't started yet, focus on attacking enemies near our base and don't
+		// allow army units to pursue the enemy too far from our base.
 		else if (!allOutAttack) {
 			if (army.size() > 0) {
 				if (defendBase) {
@@ -85,7 +86,6 @@ bool CombatManager::AttackEnemy() {
 		}
 	}
 	
-
 	return false;
 }
 
@@ -98,7 +98,7 @@ bool CombatManager::AllOutAttackEnemy()
 	bool newTarget = false;
 	targetAtBase = nullptr;
 	
-
+	// Abort all-out attack if the enemy location still hasn't been found.
 	if (!foundEnemyBase) {
 		return false;
 	}
@@ -189,16 +189,11 @@ bool CombatManager::AllOutAttackEnemy()
 			}
 			actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, lastAllOutPos);
 		}
-
 	}
 
 	return true;
 }
 
-//Sweeping lets the army go from location to location to find other enemy bases.
-//The sweeping locations are sorted from closest to enemy base which was determined at the start of the base
-//If too many locations have been sweeped with no enemies, we start sending reapers back to random locations since we
-//most likely missed the last few buildings.
 bool CombatManager::updateSweeping(Units &army, Units &enemies) {
 	Units next_army_batch;
 	//If we are near the sweep location start moving to next sweep location
@@ -266,11 +261,11 @@ bool CombatManager::updateSweeping(Units &army, Units &enemies) {
 	else if (enemies.size() == 0) {
 		defendBase = false;
 	}
+
 	return false;
 }
 
 void CombatManager::CalculateGatherLocation() {
-	//Accumulate the army somewhere near the enemy base. Helps with attacking at the same time.
 	Point2D p;
 	if (enemyStartLocation != p) {
 
@@ -284,7 +279,7 @@ void CombatManager::CalculateGatherLocation() {
 			gatherLocation.y = (GetStartPoint().y - enemyStartLocation.y) / 2;
 		}
 
-		//Get a placeable and pathable location for gather location
+		//Get a pathable location for gather location
 		Point2D tempPoint = gatherLocation;
 		for (size_t i = 0; i < 30; i++) {
 			if ((observation->IsPathable(tempPoint)) && (observation->IsPathable(tempPoint))) {
@@ -313,15 +308,17 @@ void CombatManager::GatherNearEnemy() {
 
 }
 
-
 void CombatManager::OnIdleMarine(const Unit* unit) {
-	if (allOutAttack) {
-		return;
-	}
 	const GameInfo& game_info = observation->GetGameInfo();
 	Point2D newPoint = bases[bases.size()-1]->origin;
 	size_t randomMarineLocation = 0;
 	size_t numberMarines = CountUnitType(UNIT_TYPEID::TERRAN_MARINE);
+
+	// Only use onIdle behavior when not attacking enemy base.
+	if (allOutAttack) {
+		return;
+	}
+
 	//Send every #th idle marine to a random enemy location so that we can spot enemy
 	if (allOutAttack || ((numberIdleMarines % 50) == 0)) {
 		//Went through all sweep location so fail safe is to just keep searching
@@ -363,6 +360,8 @@ bool CombatManager::FindEnemyBase()
 	static int printer;
 	const GameInfo& game_info = observation->GetGameInfo();
 	Point2D p;
+
+	// Send 1 marine to each possible enemy start location to scout.
 	if (enemyStartLocation != p) {
 		for (auto beg = begin(scoutingMarines); beg != end(scoutingMarines); ++beg) {
 			Point2D newPoint = bases[bases.size() - 1]->origin;
@@ -372,7 +371,6 @@ bool CombatManager::FindEnemyBase()
 		scoutingMarines.clear();
 		return true;
 	}
-	//    for (auto unit : units) {
 
 	//If there are less marines currently scouting than there are possible enemy locations.
 	//Send more marines to scout.
@@ -392,13 +390,13 @@ bool CombatManager::FindEnemyBase()
 				scoutingMarines[marine] = possibleLocation;
 				actions->UnitCommand(marine, ABILITY_ID::ATTACK_ATTACK, possibleLocation);
 			}
-
 		}
-		
 	}
 
 	for (auto beg = begin(scoutingMarines); beg != end(scoutingMarines); ++beg) {
 		actions->UnitCommand(beg->first, ABILITY_ID::ATTACK_ATTACK, scoutingMarines[beg->first]);
+
+		// If the scout took damage, examine the location it scouted.
 		if ((beg->first->health_max - beg->first->health) > 0) {
 			Units enemies = observation->GetUnits(Unit::Alliance::Enemy);
 			int closeEnemies = 0;
@@ -406,21 +404,20 @@ bool CombatManager::FindEnemyBase()
 				if (closeEnemies > 5) { break; }
 				if (Distance3D(enemy->pos, beg->first->pos) < 15) { ++closeEnemies; }
 			}
+			// If at least 5 enemy units were spotted, record the scout location as the enemy base.
 			if (closeEnemies > 5) {
 				enemyStartLocation = beg->second;
-				//enemyStartLocation = game_info.enemy_start_locations[0];
-				std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
 				foundEnemyBase = true;
+				std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
 				return true;
 			}
-			
 		}
 
+		// If the scout was killed on his way, record its scouting location as the enemy base.
 		if (!beg->first->is_alive) {
 			enemyStartLocation = beg->second;
-			//enemyStartLocation = game_info.enemy_start_locations[0];
-			std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
 			foundEnemyBase = true;
+			std::cout << "Found enemy base at (" << enemyStartLocation.x << "," << enemyStartLocation.y << ")" << std::endl;
 			return true;
 		}
 	}
@@ -428,21 +425,21 @@ bool CombatManager::FindEnemyBase()
 	return false;
 }
 
-
-//Sort sweeping locations from closest to enemy base location so when we run out of enemies our army will start sweeping.
 void CombatManager::sortAndAddSweepLocations(Point2D fromPoint) {
-	Point2D tempPoint;
-	Point2D point1;
-	Point2D point2;
-	int distance1;
-	int distance2;
+	Point2D tempPoint, point1, point2;
+	int distance1, distance2;
 	bool stillSwapping = false;
+
+	// Gather candidate enemy locations using expansion sites.
 	for (size_t i = 0; i < expansionLocations.size(); i++) {
 		sweepLocations.push_back(expansionLocations[i]);
 	}
+	// Also get all possible enemy start locations.
 	for (size_t i = 0; i < observation->GetGameInfo().enemy_start_locations.size(); i++) {
 		sweepLocations.push_back(observation->GetGameInfo().enemy_start_locations[i]);
 	}
+
+	// Sort by proximity to the first location our army checks, fromPoint.
 	for (size_t i = 0; i < sweepLocations.size(); i++) {
 		for (size_t j = 0; j < sweepLocations.size() - i - 1; j++) {
 			point1 = sweepLocations[j];
@@ -466,20 +463,15 @@ void CombatManager::sortAndAddSweepLocations(Point2D fromPoint) {
 void CombatManager::HellionMorph(const Units units, bool attacking, Point2D to) {
 	if (!units.empty()) {
 		float distanceAway = Distance2D(units.back()->pos, to);
-		for (const auto& hellion : units) {
-			// if attacking, transform to Hellbat and attack target
-			if (attacking) {
-				if (distanceAway < 65 && (CountUnitType(UNIT_TYPEID::TERRAN_ARMORY) != 0)) {
-					actions->UnitCommand(hellion, ABILITY_ID::MORPH_HELLBAT);
-				}
-				//actions->UnitCommand(hellion, ABILITY_ID::ATTACK_ATTACK, to);
+		// If attacking, transform to Hellbat within a small distance of the attack location.
+		if (attacking) {
+			if (distanceAway < 65 && (CountUnitType(UNIT_TYPEID::TERRAN_ARMORY) != 0)) {
+				actions->UnitCommand(units, ABILITY_ID::MORPH_HELLBAT);
 			}
-			// if retreating, transform to Hellion and move to location
-			else {
-				actions->UnitCommand(hellion, ABILITY_ID::MORPH_HELLION);
-				//actions->UnitCommand(hellion, ABILITY_ID::SMART, to);
-			}
+		}
+		// If retreating, transform to Hellion.
+		else {
+			actions->UnitCommand(units, ABILITY_ID::MORPH_HELLION);
 		}
 	}
 }
-
