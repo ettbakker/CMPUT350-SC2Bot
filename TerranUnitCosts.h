@@ -5,13 +5,16 @@
 #include "sc2utils/sc2_manage_process.h"
 #include "sc2utils/sc2_arg_parser.h"
 #include <sc2api\sc2_unit_filters.h>
-#include "Manager.h"
-#include "ProductionManager.h"
-#include "CombatManager.h"
 #include <unordered_map>
 #include <tuple>
 
 using namespace sc2;
+
+/**
+* This file includes classes and types for managing the overall economy of the bot, namely tracking the costs of
+* building/training/upgrading units. UNIT_TYPEIDs can be supplied to their relevant classes to obtain tuples 
+* representing the build/train/upgrade operation's cost in minerals and gas (and supply where applicable).
+*/
 
 enum COST { MINERALS = 0, GAS = 1, SUPPLY = 2 };
 
@@ -25,6 +28,7 @@ public:
 	typedef std::unordered_map<UNIT_TYPEID, BuildingCostTuple> BuildingCostMap;
 	typedef std::unordered_map<UPGRADE_ID, UpgradeCostTuple> UpgradeCostMap;
 
+	// Returns a map of building types to their cost in minerals and gas.
 	static const BuildingCostMap BUILDINGS() {
 		return { { UNIT_TYPEID::TERRAN_COMMANDCENTER, {400, 0} },
 			{ UNIT_TYPEID::TERRAN_SUPPLYDEPOT, {100, 0} },
@@ -41,16 +45,20 @@ public:
 			{ UNIT_TYPEID::TERRAN_PLANETARYFORTRESS, {550, 150} },
 			{ UNIT_TYPEID::TERRAN_FUSIONCORE, {150, 150} },
 			{ UNIT_TYPEID::TERRAN_TECHLAB, {50, 25} },
-			{ UNIT_TYPEID::TERRAN_REACTOR, {50, 50} }
+			{ UNIT_TYPEID::TERRAN_REACTOR, {50, 50} },
+			{ UNIT_TYPEID::TERRAN_REFINERY, {75,0} }
 		};
 	}
 
+	// Returns a map of upgrade types to their cost in minerals and gas.
+	// Currently unused.
 	static const UpgradeCostMap UPGRADES() {
 		return {
 
 		};
 	}
 
+	// Returns a map to the cost of units in minerals, gas, and supply.
 	static const UnitCostMap UNITS() {
 		return { { UNIT_TYPEID::TERRAN_SCV, {50, 0, 1} },
 			{ UNIT_TYPEID::TERRAN_MARINE, {50, 0, 1} },

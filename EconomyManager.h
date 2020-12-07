@@ -3,6 +3,7 @@
 #include "TerranUnitCosts.h"
 
 class EconomyManager : public Manager {
+public:
 	EconomyManager() { };
 
 	void UpdateResourceCounts();
