@@ -91,6 +91,7 @@ public:
 	const Unit* GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYPEID builder_type = UNIT_TYPEID::TERRAN_SCV);
 	const Unit* FindNearestBuildableGeyser(Point2D start);
 	const Unit* FindNearestMineralPatch(Point2D start);
+	const Unit* GetBestNearestHarvestSpot(const Point2D& point, UNIT_TYPEID unit_type, Unit::Alliance alliance);
 
 private:
 	EconomyManager* econMngr;

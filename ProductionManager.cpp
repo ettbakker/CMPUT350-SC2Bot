@@ -127,6 +127,11 @@ bool ProductionManager::CanBuildCommandCenter() {
 	return true;
 }
 
+// Returns true if:
+//	1. There are no more than 5 barracks near a base to force building at other bases.
+//	2. If more than 4 barracks exist, only build a new one if we have 1 command center per base.
+//	3. There are no more than 3 barracks per base.
+//	4. If we have 2 barracks, postpone any more until a factory is built.
 bool ProductionManager::CanBuildBarracks() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_BARRACKS)) {
 		return false;
@@ -134,7 +139,7 @@ bool ProductionManager::CanBuildBarracks() {
 	if ((CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 5) ||
 		((CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > 4) && (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size())) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > (bases.size() * 3)) ||
-		((CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) < 1) && (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) >1))) {
+		((CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) < 1) && (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > 2))) {
 		return false;
 	}
 	return true;
@@ -415,15 +420,15 @@ bool ProductionManager::TryBuildFusionCore(const BoundingBox& box) {
 void ProductionManager::OnIdleSCV(const Unit* unit) {
 
 	const GameInfo& game_info = observation->GetGameInfo();
-	const Unit* bestCommandCenter = GetBestNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_COMMANDCENTER, Unit::Alliance::Self);
+	const Unit* bestCommandCenter = GetBestNearestHarvestSpot(unit->pos, UNIT_TYPEID::TERRAN_COMMANDCENTER, Unit::Alliance::Self);
 	const Unit* mineral_target;
 	bool foundSomething = true;
 	//Search for a mineral field or refinery that isn't full
 	if (!bestCommandCenter) {
-		mineral_target = GetBestNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_REFINERY, Unit::Alliance::Self);
+		mineral_target = GetBestNearestHarvestSpot(unit->pos, UNIT_TYPEID::TERRAN_REFINERY, Unit::Alliance::Self);
 	}
 	else {
-		mineral_target = GetBestNearestUnit(bestCommandCenter->pos, UNIT_TYPEID::TERRAN_REFINERY, Unit::Alliance::Self);
+		mineral_target = GetBestNearestHarvestSpot(bestCommandCenter->pos, UNIT_TYPEID::TERRAN_REFINERY, Unit::Alliance::Self);
 	}
 	if (!mineral_target) {
 		if (!bestCommandCenter) {
@@ -691,4 +696,41 @@ const Unit* ProductionManager::FindNearestMineralPatch(Point2D start) {
 	}
 
 	return target_patch;
+}
+
+// 
+const Unit* ProductionManager::GetBestNearestHarvestSpot(const Point2D& point, UNIT_TYPEID unit_type, Unit::Alliance alliance)
+{
+	Units units = observation->GetUnits(alliance);
+	float distance = std::numeric_limits<float>::max();
+	const Unit* target = nullptr;
+	for (const auto& u : units)
+	{
+		if (u->unit_type == unit_type)
+		{
+			//If refinery is full, find another one
+			if (unit_type == UNIT_TYPEID::TERRAN_REFINERY) {
+				if (u->assigned_harvesters >= 3) {
+					continue;
+				}
+				else if (u->vespene_contents <= 0) {
+					continue;
+				}
+			}
+
+			if (unit_type == UNIT_TYPEID::TERRAN_COMMANDCENTER) {
+				if (u->assigned_harvesters >= 16) {
+					continue;
+				}
+			}
+
+			float d = DistanceSquared2D(u->pos, point);
+			if (d < distance)
+			{
+				distance = d;
+				target = u;
+			}
+		}
+	}
+	return target;
 }
