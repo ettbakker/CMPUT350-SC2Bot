@@ -141,7 +141,7 @@ bool CombatManager::AllOutAttackEnemy()
 	else {
 		// Do nothing if there's no enemies in sight
 		// If we aren't finding any new enemies after a while, just start sweeping
-		if ((enemies.size() == 0) || (numberTimesSinceNewTarget >= 350)) {
+		if ((enemies.size() == 0) || (numberTimesSinceNewTarget >= 300)) {
 			return updateSweeping(army, enemies);
 		}
 
@@ -215,7 +215,7 @@ bool CombatManager::updateSweeping(Units &army, Units &enemies) {
 			//std::cout << "Sweeping" << std::endl;
 		}
 		else {	//Only update the sweeping location if at least 20 units have reached the sweeping location
-			if (numberTimesSinceNewTarget >= 350) {
+			if (numberTimesSinceNewTarget >= 300) {
 				size_t numReached = 0;
 				for (size_t i = 0; i < army.size(); i++) {
 					if (numReached == 20) {
@@ -236,7 +236,7 @@ bool CombatManager::updateSweeping(Units &army, Units &enemies) {
 			else {
 				//Play around the location a bit before moving on to the next sweeping location
 				//Only does this if it still hasn't spotted an enemy
-				if ((++numberTimesSinceNewTarget % 50) == 0) {
+				if ((++numberTimesSinceNewTarget % 25) == 0) {
 					lastAllOutPos = GetRandomNearbyPoint(sweepLocations[sweepLocationCounter - 1], 10.0);
 				}
 			}
@@ -275,7 +275,32 @@ bool CombatManager::updateSweeping(Units &army, Units &enemies) {
 
 void CombatManager::CalculateGatherLocation() {
 	//Accumulate the army somewhere near the enemy base. Helps with attacking at the same time.
+	Point2D p;
+	if (enemyStartLocation != p) {
+
+		//Determine whereabouts of enemie and make gather location in that direction
+		if ((GetStartPoint().x < enemyStartLocation.x) || (GetStartPoint().y < enemyStartLocation.y)) {
+			gatherLocation.x = (GetStartPoint().x + enemyStartLocation.x) / 2;
+			gatherLocation.y = (GetStartPoint().y + enemyStartLocation.y) / 2;
+		}
+		else if ((GetStartPoint().x > enemyStartLocation.x) || (GetStartPoint().y > enemyStartLocation.y)) {
+			gatherLocation.x = (GetStartPoint().x - enemyStartLocation.x) / 2;
+			gatherLocation.y = (GetStartPoint().y - enemyStartLocation.y) / 2;
+		}
+
+		//Get a placeable and pathable location for gather location
+		Point2D tempPoint = gatherLocation;
+		for (size_t i = 0; i < 30; i++) {
+			if ((observation->IsPathable(tempPoint)) && (observation->IsPathable(tempPoint))) {
+				gatherLocation = tempPoint;
+				std::cout << "Gather at X:" << gatherLocation.x << " Y:" << gatherLocation.y << std::endl;
+				return;
+			}
+			tempPoint = GetRandomNearbyPoint(gatherLocation, 5.0);
+		}
+	}
 	gatherLocation = FindCenterOfMap(observation->GetGameInfo());
+	std::cout << "Gather at X:" << gatherLocation.x << " Y:" << gatherLocation.y << std::endl;
 }
 
 void CombatManager::GatherNearEnemy() {
