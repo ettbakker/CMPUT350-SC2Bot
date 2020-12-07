@@ -42,7 +42,12 @@ void BasicSc2Bot::OnStep()
 	if ((step_count % 5000) == 0) {
 		AddBase();
 	}
-	
+	if ((step_count < 11000) && (step_count > 10500)) {
+		if (step_count == 10501) {
+			combatMngr->CalculateGatherLocation();
+		}
+		combatMngr->GatherNearEnemy();
+	}
 	if (step_count >= 11000) {
 		combatMngr->AllOutAttackEnemy();
 	}
