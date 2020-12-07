@@ -5,21 +5,20 @@ ProductionManager::ProductionManager()
 	econMngr = new EconomyManager();
 }
 
-
 ProductionManager::~ProductionManager() {
 	delete econMngr;
 }
+
+// Intended to be called during each OnStep() call in the main bot class.
+// For each base, try to build a small subset of Terran structures.
+// Engineering bays and turrets are currently disabled to focus resources elsewhere.
 void ProductionManager::BuildStructures() {
 	econMngr->SetObservationAndActions(observation, actions, bases, expansionLocations);
 
 	for (auto base : bases) {
 		building_point = base->origin;
-		//If we can find a command center at the base
-		//if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 50) >=1) {
-			//There is a command center at the start location or near it then we can build buildings around that command center.
-			//Allows us to have multiple bases with their own economies
 		
-		//Check if no command center is near by. If there is none, try to build the command center first before anything else
+		// If no command center exists for this base, try build one before anything else
 		if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_COMMANDCENTER, building_point, 25) == 0) {
 			TryBuildCommandCenter(0.0);
 			continue;
@@ -28,30 +27,24 @@ void ProductionManager::BuildStructures() {
 			TryBuildSupplyDepot();
 			TryBuildRefinery();
 			TryBuildBarracks();
-			//TryBuildEngineeringBay();
 			TryBuildFactory();
 			TryBuildArmory();
-			TryBuildTurrets(30.0);
+
+			// Uncomment to reenable engineering bays (upgrade vehicles) and turrets.
+			//TryBuildEngineeringBay();
+			//TryBuildTurrets(30.0);
 		}
-    
-		/*}
-		else {
-			//Build a command center at the base location before we build anything else
-			TryBuildCommandCenter(5.0);
-		}*/
-	
-		
 	}
-	
-	
 }
 
-// Generic methods for attempting to build any structure
+// Generic Build Structure Methods
 
+// Build a given structure within a radius of a point. Returns true if build command is successful.
 bool ProductionManager::TryBuildStructureNearPoint(ABILITY_ID build_ability, Point2D point, float build_radius, const Unit* builder_unit) {
 	Point2D near_point;
 	bool is_valid_point = false;
 
+	// Attempt to find a random placable location nearby
 	for (size_t i = 0; i < 20; ++i) {
 		near_point = GetRandomNearbyPoint(building_point, build_radius);
 		if (observation->IsPlacable(near_point)) {
@@ -59,7 +52,6 @@ bool ProductionManager::TryBuildStructureNearPoint(ABILITY_ID build_ability, Poi
 			break;
 		}
 	}
-	
 	if (!is_valid_point) {
 		return false;
 	}
@@ -75,10 +67,12 @@ bool ProductionManager::TryBuildStructureNearPoint(ABILITY_ID build_ability, Poi
 	return true;
 }
 
+// Build a given structure in a random point within a bounding box. Returns true if build command is successful.
 bool ProductionManager::TryBuildStructureInBox(ABILITY_ID build_ability, const BoundingBox& box, const Unit* builder_unit) {
 	return ProductionManager::TryBuildStructureNearPoint(build_ability, box.RandPoint(), 0.0, builder_unit);
 }
 
+// Build a given structure on top of a unit, returning true if build command succeeds. Only used when building refineries.
 bool ProductionManager::TryBuildStructureAtUnit(ABILITY_ID build_ability, const Unit* target_unit, const Unit* builder_unit) {
 	if (builder_unit == nullptr) {
 		builder_unit = GetBuilderUnit(build_ability);
@@ -92,14 +86,10 @@ bool ProductionManager::TryBuildStructureAtUnit(ABILITY_ID build_ability, const 
 	return true;
 }
 
-bool ProductionManager::TryBuildStructureInBase(ABILITY_ID build_ability, const Base* base, const Unit* builder_unit)
-{
-	// TODO: Build w.r.t. base
-	return false;
-}
+// Methods for verifying whether a certain structure can be built.
+// Each includes a resource check to see if enough minerals/gas are available at the moment.
 
-// Methods for verifying whether a certain structure can be built
-
+// Returns true if we don't already have 2 refineries per command center.
 bool ProductionManager::CanBuildRefinery() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_REFINERY)) {
 		return false;
@@ -110,27 +100,25 @@ bool ProductionManager::CanBuildRefinery() {
 	return true;
 }
 
+// Returns true if we are within 8 units of the supply cap.
 bool ProductionManager::CanBuildSupplyDepot() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_SUPPLYDEPOT)) {
 		return false;
 	}
-	// If we are not supply capped, don't build a supply depot.
+
 	if ((observation->GetFoodUsed() <= observation->GetFoodCap() - 8)) {
 		return false;
 	}
-	/*if ((CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_SUPPLYDEPOT, building_point) >= (10*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER))) ||
-		((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 5) && (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size())) ||
-		(observation->GetFoodCap() > (bases.size() * 60))) {
-		return false;
-	}*/
+
 	return true;
 }
 
+// Returns true if we have less than 3 command centers and we have at least 10 marines.
 bool ProductionManager::CanBuildCommandCenter() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
 		return false;
 	}
-	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) > 3) {
+	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) >= 3) {
 		return false;
 	}
 	if (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)>0 && CountUnitType(UNIT_TYPEID::TERRAN_MARINE) < 10) {
@@ -139,27 +127,34 @@ bool ProductionManager::CanBuildCommandCenter() {
 	return true;
 }
 
+// Returns true if:
+//	1. There are no more than 5 barracks near a base to force building at other bases.
+//	2. If more than 4 barracks exist, only build a new one if we have 1 command center per base.
+//	3. There are no more than 3 barracks per base.
+//	4. If we have 2 barracks, postpone any more until a factory is built.
 bool ProductionManager::CanBuildBarracks() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_BARRACKS)) {
 		return false;
 	}
-	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 1) ||
-		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 5) ||
+	if ((CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_BARRACKS, building_point) >= 5) ||
 		((CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > 4) && (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < bases.size())) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > (bases.size() * 3)) ||
-		((CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) < 1) && (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) >1))) {
+		((CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) < 1) && (CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) > 2))) {
 		return false;
 	}
 	return true;
 }
 
+// Returns true if:
+//	1. We have at least 2 command centers, meaning 1 complete expansion from the home base.
+//	2. We have at least 25 army units.
+//	3. We don't already have an engineering bay.
 bool ProductionManager::CanBuildEngineeringBay() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_ENGINEERINGBAY)) {
 		return false;
 	}
-	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 5) ||
-		(CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < 2) ||
-		(CountUnitType(UNIT_TYPEID::TERRAN_MARINE) < 25) ||
+	if ((CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) < 2) ||
+		(observation->GetArmyCount() < 25) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_ENGINEERINGBAY) > 1)) {
 		return false;
 	}
@@ -167,21 +162,28 @@ bool ProductionManager::CanBuildEngineeringBay() {
 	return true;
 }
 
+// Returns true if:
+//	1. We have at least 1 barracks to satisfy the tech tree
+//	2. We have at least 5 marines already.
+//	3. We have no more than 2 factories per base.
+//
 bool ProductionManager::CanBuildFactory() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_FACTORY)) {
 		return false;
 	}
-	if ((CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) < 2)||
-		(CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) < 1) ||
+	if ((CountUnitType(UNIT_TYPEID::TERRAN_BARRACKS) < 1) ||
 		(CountUnitType(UNIT_TYPEID::TERRAN_MARINE) < 5) ||
-		(CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) > (bases.size() * 2)) ||
-		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_FACTORY, building_point) >= 1)) {
+		(CountUnitType(UNIT_TYPEID::TERRAN_FACTORY) > (bases.size() * 2))) {
 		return false;
 	}
 	
 	return true;
 }
 
+// Returns true if:
+//	1. We have at least 1 factory to satisfy the tech tree.
+//	2. We have no more than 1 armory.
+//	3. We have at least 2 command centers (i.e. 1 successful expansion)
 bool ProductionManager::CanBuildArmory()
 {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_ARMORY)) {
@@ -195,6 +197,7 @@ bool ProductionManager::CanBuildArmory()
 	return true;
 }
 
+// Returns true if we can afford to build a bunker.
 bool ProductionManager::CanBuildBunker() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_BUNKER)) {
 		return false;
@@ -202,6 +205,9 @@ bool ProductionManager::CanBuildBunker() {
 	return true;
 }
 
+// Returns true if:
+//	1. We have at least 1 factory to satisfy the tech tree.
+//	2. We have no more than 1 starport within range of the base.
 bool ProductionManager::CanBuildStarPort() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_STARPORT)) {
 		return false;
@@ -213,33 +219,37 @@ bool ProductionManager::CanBuildStarPort() {
 	return true;
 }
 
+// Returns true if we have a starport to satisfy the tech tree.
 bool ProductionManager::CanBuildFusionCore() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_FUSIONCORE)) {
 		return false;
 	}
-	if ((CountUnitType(UNIT_TYPEID::TERRAN_STARPORT) < 1) ||
-		(CountUnitType(UNIT_TYPEID::TERRAN_STARPORT) >= 1)) {
+	if (CountUnitType(UNIT_TYPEID::TERRAN_STARPORT) < 1) {
 		return false;
 	}
 	return true;
 }
 
+//Returns true if:
+//	1. We have at least 1 engineering bay to satisfy the tech tree.
+//	2. We have no more than 5 turrets near the building point (i.e. base).
+//	3. We are attempting to build the turret near an expansion, not the home base.
 bool ProductionManager::CanBuildTurret() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_MISSILETURRET)) {
 		return false;
 	}
 	//Need an engineering bay to build turrets
 	if ((CountUnitType(UNIT_TYPEID::TERRAN_ENGINEERINGBAY) < 1) ||
-		(CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) * 2 < bases.size()) ||
-		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_MISSILETURRET, building_point) > 15) ||
+		(CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_MISSILETURRET, building_point) > 5) ||
 		(building_point == bases[0]->origin)) {
 		return false;
 	}
 	return true;
 }
 
+// Build Methods for each Terran structure
 
-
+// If a refinery can be built, find a nearby free geyser and build on it.
 bool ProductionManager::TryBuildRefinery(const Unit* target_geyser) {
 	if (!CanBuildRefinery()) {
 		return false;
@@ -248,9 +258,6 @@ bool ProductionManager::TryBuildRefinery(const Unit* target_geyser) {
 	//Need to find position of vespene gas
 	if (target_geyser == nullptr) {
 		target_geyser = FindNearestBuildableGeyser(building_point);
-		//std::cout << "x= " << target_geyser->pos.x << " ,y= " << target_geyser->pos.y << std::endl;
-		//float distance = sqrtf(pow(building_point.x - target_geyser->pos.x, 2) + pow(building_point.y - target_geyser->pos.y, 2));
-		//std::cout << distance << std::endl;
 	}
 	if (!target_geyser) {
 		return false;
@@ -413,15 +420,15 @@ bool ProductionManager::TryBuildFusionCore(const BoundingBox& box) {
 void ProductionManager::OnIdleSCV(const Unit* unit) {
 
 	const GameInfo& game_info = observation->GetGameInfo();
-	const Unit* bestCommandCenter = GetBestNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_COMMANDCENTER, Unit::Alliance::Self);
+	const Unit* bestCommandCenter = GetBestNearestHarvestSpot(unit->pos, UNIT_TYPEID::TERRAN_COMMANDCENTER, Unit::Alliance::Self);
 	const Unit* mineral_target;
 	bool foundSomething = true;
 	//Search for a mineral field or refinery that isn't full
 	if (!bestCommandCenter) {
-		mineral_target = GetBestNearestUnit(unit->pos, UNIT_TYPEID::TERRAN_REFINERY, Unit::Alliance::Self);
+		mineral_target = GetBestNearestHarvestSpot(unit->pos, UNIT_TYPEID::TERRAN_REFINERY, Unit::Alliance::Self);
 	}
 	else {
-		mineral_target = GetBestNearestUnit(bestCommandCenter->pos, UNIT_TYPEID::TERRAN_REFINERY, Unit::Alliance::Self);
+		mineral_target = GetBestNearestHarvestSpot(bestCommandCenter->pos, UNIT_TYPEID::TERRAN_REFINERY, Unit::Alliance::Self);
 	}
 	if (!mineral_target) {
 		if (!bestCommandCenter) {
@@ -447,51 +454,47 @@ void ProductionManager::OnIdleSCV(const Unit* unit) {
 	}
 }
 
+// Command centers will try to train 22 SCVs per center (16 for minerals, 3 for each of the 2 refineries).
 void ProductionManager::OnIdleCommandCenter(const Unit* unit) {
 
+	// Orbital command morph disabled as MULEs are not used by the bot.
 	if (CountUnitType(UNIT_TYPEID::TERRAN_SUPPLYDEPOT) > 2 
 		&& CountUnitType(UNIT_TYPEID::TERRAN_ORBITALCOMMAND) < 2) {
 		//actions->UnitCommand(unit, ABILITY_ID::MORPH_ORBITALCOMMAND);
 	}
-	//actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
 
-	//if (unit->assigned_harvesters <= unit->ideal_harvesters) {
-		if (CountUnitType(UNIT_TYPEID::TERRAN_SCV) <= (16 * CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER))) {
-			actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
-			return;
-		}
-	//}
+
+	if (CountUnitType(UNIT_TYPEID::TERRAN_SCV) <= (22 * CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER))) {
+		actions->UnitCommand(unit, ABILITY_ID::TRAIN_SCV);
+		return;
+	}
+
 }
 
+// When idle, barracks will train marines, reapers, and marauders (if a tech lab has been attached).
 void ProductionManager::OnIdleBarracks(const Unit* unit) {
 	//Add on tags are for different states of the barracks
 	//Known tags are 4389076993, 4383309827, 4369678348
 
-	if (unit->add_on_tag == 0)
-	{
-		if (observation->GetArmyCount() > 30) {
+	// Build techlab for creating Marauders after our army size reaches 30
+	if (unit->add_on_tag == 0 && observation->GetArmyCount() > 30) {
 			TryBuildAddOn(unit, ABILITY_ID::BUILD_TECHLAB_BARRACKS);
-		}
 	}
-	/*if (observation->GetArmyCount() > (CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER) * 20)) {
-		return;
-	}*/
 	
 	//There's a tech lab so try and have one marauder for every 7 marines
 	if ((unit->add_on_tag != 0) && (CountUnitType(UNIT_TYPEID::TERRAN_MARAUDER)*7 < CountUnitType(UNIT_TYPEID::TERRAN_MARINE))) {
-		//std::cout << "Tag: " << unit->add_on_tag << std::endl;
 		actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARAUDER, true);
 		return;
 	}
-	if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)) {
+	// Maintain a ratio of 3 marines to every 2 reapers.
+	if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE)*3 > CountUnitType(UNIT_TYPEID::TERRAN_REAPER)*2) {
 		actions->UnitCommand(unit, ABILITY_ID::TRAIN_REAPER, true);
 	}
-	//std::cout << "Tag: " << unit->add_on_tag << std::endl;
-	actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE, true);
-	
+
+	actions->UnitCommand(unit, ABILITY_ID::TRAIN_MARINE, true);	
 }
 
-
+// Factories will train 1 hellion per 3 marines we currently have.
 void ProductionManager::OnIdleFactory(const Unit* unit) {
 	if (CountUnitType(UNIT_TYPEID::TERRAN_MARINE) > CountUnitType(UNIT_TYPEID::TERRAN_HELLIONTANK)*3 )
 	{
@@ -499,6 +502,7 @@ void ProductionManager::OnIdleFactory(const Unit* unit) {
 	}
 }
 
+// Engineering bays will attempt to upgrade infantry abilities up to their max level.
 void ProductionManager::OnIdleEngineeringBay(const Unit* unit) {
 
 	auto upgrades = observation->GetUpgrades();
@@ -527,6 +531,7 @@ void ProductionManager::OnIdleEngineeringBay(const Unit* unit) {
 	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANINFANTRYARMOR);
 }
 
+// In addition to training SCVs, MULEs will be constantly called down.
 void ProductionManager::OnIdleOrbitalCommand(const Unit* unit) {
 	
 	actions->UnitCommand(unit, ABILITY_ID::EFFECT_CALLDOWNMULE, 
@@ -539,13 +544,15 @@ void ProductionManager::OnIdleOrbitalCommand(const Unit* unit) {
 	}
 }
 
+// Try to build an add-on for a given completed structure.
 void ProductionManager::TryBuildAddOn(const Unit* unit, ABILITY_ID add_on_ability) {
+	Units units;
 
+	// Wait until we have at least 2 of the structure before upgrading them.
 	if (CountUnitType(unit->unit_type) < 2) {
 		return;
 	}
-	Filter unit_t = IsUnit(unit->unit_type);
-	Units units = observation->GetUnits(unit_t);
+	units = observation->GetUnits(IsUnit(unit->unit_type));
 
 	for (const auto& u : units) {
 		if (u->build_progress != 1) {
@@ -555,7 +562,11 @@ void ProductionManager::TryBuildAddOn(const Unit* unit, ABILITY_ID add_on_abilit
 	}
 }
 
+// Armories will attempt to improve vehicles with each of their 3 upgrades upto level 3.
+// Currently disabled to save resources for other tasks.
 void ProductionManager::OnIdleArmory(const Unit* unit) {
+	return; // Comment out to turn on armory upgrades.
+
 	auto upgrades = observation->GetUpgrades();
 	if (!upgrades.empty()) {
 		for (const auto& u : upgrades)
@@ -579,14 +590,44 @@ void ProductionManager::OnIdleArmory(const Unit* unit) {
 	actions->UnitCommand(unit, ABILITY_ID::RESEARCH_TERRANVEHICLEWEAPONSLEVEL1,true);
 }
 
+// For each damaged building, dispatch an SCV to repair it.
+// Unimplemented as we currently focus on attacking the enemy before repairs are relevant.
+bool ProductionManager::FixBuildings() {
+	Units units = observation->GetUnits();
+
+	for (auto u : units) {
+		if (u->health < u->health_max) {
+			// Also get an scv to build the structure.
+			const Unit* unit_to_build = nullptr;
+			Units scvUnit = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_SCV));
+			for (const auto& unit : scvUnit)
+			{
+				for (const auto& order : unit->orders)
+				{
+					if (order.ability_id == ABILITY_ID::SMART)
+					{
+						return false;
+					}
+				}
+				unit_to_build = unit;
+			}
+			actions->UnitCommand(unit_to_build, ABILITY_ID::SMART, u);
+		}
+	}
+	return false;
+}
 
 // Build utility methods
+
+// Return a random point within a given radius of a starting point.
 Point2D ProductionManager::GetNearbyPoint(const Point2D& start_point, float build_radius)
 {
 	return Point2D(start_point.x + (GetRandomScalar() * build_radius),
 		start_point.y + (GetRandomScalar() * build_radius));
 }
 
+// Find a builder unit to execute the given build command. If another unit is already executing
+// that build command, return nullptr instead.
 const Unit* ProductionManager::GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYPEID builder_type) {
 	const Unit* unit_to_build = nullptr;
 	Units units = observation->GetUnits(Unit::Alliance::Self);
@@ -609,37 +650,7 @@ const Unit* ProductionManager::GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYP
 	return unit_to_build;
 }
 
-bool ProductionManager::fixBuildings() {
-	Units units = observation->GetUnits();
-
-	for (auto u : units) {
-		
-		if (u->health < u->health_max) {
-			//std::cout << "Building Damaged" << std::endl;
-			// Also get an scv to build the structure.
-			const Unit* unit_to_build = nullptr;
-			Units scvUnit = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_SCV));
-			for (const auto& unit : scvUnit)
-			{
-				for (const auto& order : unit->orders)
-				{
-					if (order.ability_id == ABILITY_ID::SMART)
-					{
-						return false;
-					}
-				}
-				unit_to_build = unit;
-
-			}
-
-			actions->UnitCommand(unit_to_build, ABILITY_ID::SMART, u);
-
-		}
-	}
-
-	return false;
-}
-
+// Return the nearest vespene geyser that we haven't built a refinery on.
 const Unit* ProductionManager::FindNearestBuildableGeyser(Point2D start)
 {
 	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsGeyser());
@@ -670,6 +681,7 @@ const Unit* ProductionManager::FindNearestBuildableGeyser(Point2D start)
 	return target_geyser;
 }
 
+// Return the closest mineral patch to a given starting point.
 const Unit* ProductionManager::FindNearestMineralPatch(Point2D start) {
 	Units patches = observation->GetUnits(Unit::Alliance::Neutral, IsMineralPatch());
 	const Unit* target_patch = nullptr;
@@ -684,4 +696,41 @@ const Unit* ProductionManager::FindNearestMineralPatch(Point2D start) {
 	}
 
 	return target_patch;
+}
+
+// 
+const Unit* ProductionManager::GetBestNearestHarvestSpot(const Point2D& point, UNIT_TYPEID unit_type, Unit::Alliance alliance)
+{
+	Units units = observation->GetUnits(alliance);
+	float distance = std::numeric_limits<float>::max();
+	const Unit* target = nullptr;
+	for (const auto& u : units)
+	{
+		if (u->unit_type == unit_type)
+		{
+			//If refinery is full, find another one
+			if (unit_type == UNIT_TYPEID::TERRAN_REFINERY) {
+				if (u->assigned_harvesters >= 3) {
+					continue;
+				}
+				else if (u->vespene_contents <= 0) {
+					continue;
+				}
+			}
+
+			if (unit_type == UNIT_TYPEID::TERRAN_COMMANDCENTER) {
+				if (u->assigned_harvesters >= 16) {
+					continue;
+				}
+			}
+
+			float d = DistanceSquared2D(u->pos, point);
+			if (d < distance)
+			{
+				distance = d;
+				target = u;
+			}
+		}
+	}
+	return target;
 }

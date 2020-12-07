@@ -33,10 +33,6 @@ bool CombatManager::AttackEnemy() {
 		}
 	}
 	
-
-	/*if (allOutAttack) {
-		return false;
-	}*/
 	if (targetAtBase != nullptr) {
 		// Get all army units
 		for (auto unit_type : TerranUnitCategories::ALL_COMBAT_UNITS()) {
@@ -103,9 +99,9 @@ bool CombatManager::AllOutAttackEnemy()
 	targetAtBase = nullptr;
 	
 
-	/*if (!foundEnemyBase) {
+	if (!foundEnemyBase) {
 		return false;
-	}*/
+	}
 
 	// Get all army units
 	for (auto unit_type : TerranUnitCategories::ALL_COMBAT_UNITS()) {

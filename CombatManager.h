@@ -2,7 +2,6 @@
 #include "sc2api/sc2_api.h"
 #include "BoundingBox.h"
 #include "Manager.h"
-#include "Command.h"
 #include "Base.h"
 #include "TerranUnitCategories.h"
 #include <list>
