@@ -604,12 +604,13 @@ const Unit* ProductionManager::GetBuilderUnit(ABILITY_ID build_ability, UNIT_TYP
 const Unit* ProductionManager::FindNearestBuildableGeyser(Point2D start)
 {
 	Units geysers = observation->GetUnits(Unit::Alliance::Neutral, IsGeyser());
-	Units refineries = observation->GetUnits(Unit::Alliance::Self, IsGeyser());
+	Units refineries = observation->GetUnits(Unit::Alliance::Self, IsUnit(UNIT_TYPEID::TERRAN_REFINERY));
 	float dist, closest_dist = std::numeric_limits<float>::max();
 	const Unit* target_geyser = nullptr;
 	bool is_refinery = false;
 
 	for (auto g : geysers) {
+		is_refinery = false;
 		for (auto r : refineries) {
 			if (DistanceSquared2D(r->pos, g->pos) < 5.0) {
 				is_refinery = true;
