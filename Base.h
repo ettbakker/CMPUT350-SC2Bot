@@ -11,6 +11,13 @@
 
 using namespace sc2;
 
+/**
+* The Base class implements a basic definition for both the bot's starting base
+* and the expansions it creates.
+* 
+* Since our bot only uses the origin point of each base in its decision-making, this
+* class has essentially no functionality in this version of the bot.
+*/
 
 class Base {
 public:
