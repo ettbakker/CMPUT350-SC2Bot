@@ -26,5 +26,5 @@ struct BoundingBox {
 	};
 
 	Point2D p;
-	float w, h;
+	float w = 0.0, h = 0.0;
 };

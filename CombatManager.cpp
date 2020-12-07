@@ -242,7 +242,7 @@ bool CombatManager::AllOutAttackEnemy()
 
 
 		// Update attack pos if nearest enemy is some distance from the last attack location
-		if (closest_d > 15.0f && closest_d < 50.0f) {
+		if (closest_d > 15.0f) {
 			lastAllOutPos = target_point;
 			newTarget = true;
 		}
