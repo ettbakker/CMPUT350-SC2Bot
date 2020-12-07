@@ -53,7 +53,12 @@ void SAM_Sc2Bot::OnStep()
 	if ((step_count % 5000) == 0) {
 		AddBase();
 	}
-	
+	if ((step_count < 11000) && (step_count > 10500)) {
+		if (step_count == 10501) {
+			combatMngr->CalculateGatherLocation();
+		}
+		combatMngr->GatherNearEnemy();
+	}
 	// After ~ 8.25 minutes, begin attacking the main enemy base.
 	if (step_count >= 11000) {
 		combatMngr->AllOutAttackEnemy();
