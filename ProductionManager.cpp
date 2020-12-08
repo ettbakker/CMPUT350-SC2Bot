@@ -86,7 +86,10 @@ bool ProductionManager::CanBuildRefinery() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_REFINERY)) {
 		return false;
 	}
-	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 10) >= 2*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
+	if (CountUnitType(UNIT_TYPEID::TERRAN_REFINERY) > 2 * CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
+		return false;
+	}
+	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 20) >= 2*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
 		return false;
 	}
 	return true;
@@ -611,7 +614,7 @@ const Unit* ProductionManager::FindNearestBuildableGeyser(Point2D start)
 
 	for (auto g : geysers) {
 		is_refinery = false;
-		for (auto r : refineries) {	
+		for (auto r : refineries) {
 			if (DistanceSquared2D(r->pos, g->pos) < 5.0) {
 				is_refinery = true;
 				break;
