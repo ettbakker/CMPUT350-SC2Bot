@@ -236,7 +236,7 @@ bool CombatManager::updateSweeping(Units& army, Units& enemies) {
 				}
 			}
 		}
-		if (!observation->IsPathable(lastAllOutPos)) {
+		if (!observation->IsPathable(lastAllOutPos) && (sweepLocationCounter > 0)) {
 			lastAllOutPos = sweepLocations[sweepLocationCounter - 1];
 		}
 
