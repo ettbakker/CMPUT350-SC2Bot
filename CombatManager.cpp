@@ -114,7 +114,7 @@ bool CombatManager::AllOutAttackEnemy()
 	// Also cancels the allOutAttack if we failed.
 	if (army.size() <= 10) {
 		allOutAttack = false;
-		std::cout << "Retreat!" << std::endl;
+		//std::cout << "Retreat!" << std::endl;
 		return false;
 	}
 
@@ -188,8 +188,8 @@ bool CombatManager::AllOutAttackEnemy()
 				//std::cout << "num " << numberTimesSinceNewTarget << std::endl;
 				lastAllOutPos = GetRandomNearbyPoint(lastAllOutPos, 8.0);
 			}
-			if (!observation->IsPathable(lastAllOutPos)) {
-				lastAllOutPos = sweepLocations[sweepLocationCounter - 1];
+			if (!observation->IsPathable(lastAllOutPos) && sweepLocationCounter > 0) {
+				lastAllOutPos = sweepLocations[(sweepLocationCounter - 1) % sweepLocations.size()];
 			}
 			actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, lastAllOutPos);
 		}
@@ -221,7 +221,7 @@ bool CombatManager::updateSweeping(Units& army, Units& enemies) {
 					}
 				}
 				if (numReached >= 20) {
-					lastAllOutPos = sweepLocations[sweepLocationCounter++];
+					lastAllOutPos = sweepLocations[sweepLocationCounter++ % sweepLocations.size()];
 					std::cout << "Sweep Next Location. " << "Counter: " << sweepLocationCounter << std::endl;
 					numberTimesSinceNewTarget = 0;
 					actions->UnitCommand(army, ABILITY_ID::ATTACK, lastAllOutPos);
@@ -231,13 +231,13 @@ bool CombatManager::updateSweeping(Units& army, Units& enemies) {
 			else {
 				//Play around the location a bit before moving on to the next sweeping location
 				//Only does this if it still hasn't spotted an enemy
-				if ((++numberTimesSinceNewTarget % 25) == 0) {
-					lastAllOutPos = GetRandomNearbyPoint(sweepLocations[sweepLocationCounter - 1], 10.0);
+				if ((++numberTimesSinceNewTarget % 25) == 0 && sweepLocationCounter != 0) {
+					lastAllOutPos = GetRandomNearbyPoint(sweepLocations[(sweepLocationCounter - 1) % sweepLocations.size()], 10.0);
 				}
 			}
 		}
 		if (!observation->IsPathable(lastAllOutPos) && (sweepLocationCounter > 0)) {
-			lastAllOutPos = sweepLocations[sweepLocationCounter - 1];
+			lastAllOutPos = sweepLocations[(sweepLocationCounter - 1) % sweepLocations.size()];
 		}
 
 		if ((numberTimesSinceNewTarget % 25) == 0) {
@@ -247,7 +247,7 @@ bool CombatManager::updateSweeping(Units& army, Units& enemies) {
 				for (size_t i = 0; i < reapers.size(); i++) {
 					//Send each out to a random point
 					actions->UnitCommand(reapers[i], ABILITY_ID::ATTACK,
-						GetRandomNearbyPoint(sweepLocations[rand() % sweepLocationCounter], 15.0), true);
+						GetRandomNearbyPoint(sweepLocations[rand() % (sweepLocationCounter % sweepLocations.size())], 15.0), true);
 				}
 				//Rebuild the army without reapers
 				army.clear();
@@ -339,7 +339,7 @@ void CombatManager::OnIdleMarine(const Unit* unit) {
 		}
 		else {
 			//Get nearby points to current sweeping location
-			newPoint = sweepLocations[sweepLocationCounter];
+			newPoint = sweepLocations[sweepLocationCounter % sweepLocations.size()];
 		}
 		newPoint = GetRandomNearbyPoint(newPoint, 15.0);
 		numberIdleMarines = 0;
@@ -369,7 +369,7 @@ bool CombatManager::FindEnemyBase()
 	if (enemyStartLocation != p) {
 		for (auto beg = begin(scoutingMarines); beg != end(scoutingMarines); ++beg) {
 			Point2D newPoint = bases[bases.size() - 1]->origin;
-			newPoint = GetRandomNearbyPoint(newPoint, 15.0);
+			newPoint = GetRandomNearbyPoint(newPoint, 5.0);
 			actions->UnitCommand(beg->first, ABILITY_ID::ATTACK_ATTACK, newPoint);
 		}
 		scoutingMarines.clear();
