@@ -1,4 +1,4 @@
-# SAM-Sc2Bot
+# SAM-SC2Bot
 Our teams bot for the CMPUT350 Project, 2020. 
 
 This bot works with the [Sc2LadderServer](https://github.com/solinas/Sc2LadderServer). Please ensure that this folder is in the same directory as our bots'. Cloning our project should add this directory automatically.
