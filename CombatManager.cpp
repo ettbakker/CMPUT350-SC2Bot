@@ -32,7 +32,7 @@ bool CombatManager::AttackEnemy() {
 			}
 		}
 	}
-	
+
 	if (targetAtBase != nullptr) {
 		// Get all army units
 		for (auto unit_type : TerranUnitCategories::ALL_COMBAT_UNITS()) {
@@ -82,10 +82,10 @@ bool CombatManager::AttackEnemy() {
 					actions->UnitCommand(army, ABILITY_ID::SMART, recallPoint);
 				}
 			}
-			
+
 		}
 	}
-	
+
 	return false;
 }
 
@@ -97,7 +97,7 @@ bool CombatManager::AllOutAttackEnemy()
 	Point2D target_point = lastAllOutPos;
 	bool newTarget = false;
 	targetAtBase = nullptr;
-	
+
 	// Abort all-out attack if the enemy location still hasn't been found.
 	if (!foundEnemyBase) {
 		return false;
@@ -194,7 +194,7 @@ bool CombatManager::AllOutAttackEnemy()
 	return true;
 }
 
-bool CombatManager::updateSweeping(Units &army, Units &enemies) {
+bool CombatManager::updateSweeping(Units& army, Units& enemies) {
 	Units next_army_batch;
 	//If we are near the sweep location start moving to next sweep location
 	if ((sweepLocations.size() > 0) && (!defendBase)) {
@@ -310,7 +310,7 @@ void CombatManager::GatherNearEnemy() {
 
 void CombatManager::OnIdleMarine(const Unit* unit) {
 	const GameInfo& game_info = observation->GetGameInfo();
-	Point2D newPoint = bases[bases.size()-1]->origin;
+	Point2D newPoint = bases[bases.size() - 1]->origin;
 	size_t randomMarineLocation = 0;
 	size_t numberMarines = CountUnitType(UNIT_TYPEID::TERRAN_MARINE);
 
@@ -340,7 +340,7 @@ void CombatManager::OnIdleMarine(const Unit* unit) {
 		newPoint = GetRandomNearbyPoint(newPoint, 15.0);
 		numberIdleMarines = 0;
 	}//Send others close to base
-	else if(!allOutAttack) {
+	else if (!allOutAttack) {
 		newPoint = GetRandomNearbyPoint(newPoint, 5.0);
 	}
 	//Only send marines out if we have a small army
@@ -379,10 +379,10 @@ bool CombatManager::FindEnemyBase()
 		int round;
 		for (auto marine : marines) {
 			//make sure there still aren't enough scouters
-			if (scoutingMarines.size() >= game_info.enemy_start_locations.size()) {	}
+			if (scoutingMarines.size() >= game_info.enemy_start_locations.size()) {}
 
 			//make sure that this marine is not already scouting
-			else if (scoutingMarines.find(marine) != scoutingMarines.end()) {  }
+			else if (scoutingMarines.find(marine) != scoutingMarines.end()) {}
 
 			//add this marine to the scouters and send them off to attack
 			else {
@@ -443,7 +443,7 @@ void CombatManager::sortAndAddSweepLocations(Point2D fromPoint) {
 	for (size_t i = 0; i < sweepLocations.size(); i++) {
 		for (size_t j = 0; j < sweepLocations.size() - i - 1; j++) {
 			point1 = sweepLocations[j];
-			point2 = sweepLocations[j+1];
+			point2 = sweepLocations[j + 1];
 			distance1 = Distance2D(fromPoint, point1);
 			distance2 = Distance2D(fromPoint, point2);
 			if (distance1 > distance2) {

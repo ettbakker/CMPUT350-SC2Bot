@@ -1,8 +1,7 @@
-# BasicSc2Bot
-Template SC2 Bot for CMPUT 350 at UAlberta.
+# SAM-SC2Bot
+Our teams bot for the CMPUT350 Project, 2020. 
 
-This bot works with our fork of [Sc2LadderServer](https://github.com/solinas/Sc2LadderServer) which will be used to run the tournament at the end of the term. It should help you
-set up the build process with the correct version of SC2 API so you can focus on creating your bot.
+This bot works with the [Sc2LadderServer](https://github.com/solinas/Sc2LadderServer). Please ensure that this folder is in the same directory as our bots'. Cloning our project should add this directory automatically.
 
 # Developer Install / Compile Instructions
 ## Requirements
@@ -16,8 +15,8 @@ Download and install [Visual Studio 2019](https://www.visualstudio.com/downloads
 
 ```bat
 :: Clone the project
-$ git clone --recursive https://github.com/solinas/BasicSc2Bot.git
-$ cd BasicSc2Bot
+$ git clone --recursive https://github.com/TheArcticGiraffe/CMPUT350TeamBot.git
+$ cd CMPUT350TeamBot
 
 :: Create build directory.
 $ mkdir build
@@ -39,8 +38,8 @@ Note: Try opening the SC2 game client before installing. If the game crashes bef
 
 ```bat
 :: Clone the project
-$ git clone --recursive https://github.com/solinas/BasicSc2Bot.git
-$ cd BasicSc2Bot
+$ git clone --recursive https://github.com/TheArcticGiraffe/CMPUT350TeamBot.git
+$ cd CMPUT350TeamBot
 
 :: Create build directory.
 $ mkdir build
@@ -62,7 +61,7 @@ AI by specifying command line argurments.
 For example,
 
 ```
-/BasicSc2Bot.exe -c -a zerg -d hard -m CactusValleyLE.SC2Map
+/BasicSc2Bot.exe -c -a Zerg -d Hard -m CactusValleyLE.SC2Map
 ```
 
-will result in the bot playing against the zerg built-in AI on hard difficulty on the map CactusValleyLE.
+will result in the bot playing against the Zerg built-in AI on Hard difficulty on the map CactusValleyLE.

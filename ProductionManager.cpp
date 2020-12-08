@@ -86,6 +86,9 @@ bool ProductionManager::CanBuildRefinery() {
 	if (!econMngr->CanAffordBuilding(UNIT_TYPEID::TERRAN_REFINERY)) {
 		return false;
 	}
+	if (CountUnitType(UNIT_TYPEID::TERRAN_REFINERY) > 2 * CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
+		return false;
+	}
 	if (CountUnitTypeFromPoint(UNIT_TYPEID::TERRAN_REFINERY, building_point, 20) >= 2*CountUnitType(UNIT_TYPEID::TERRAN_COMMANDCENTER)) {
 		return false;
 	}
