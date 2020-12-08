@@ -114,6 +114,7 @@ bool CombatManager::AllOutAttackEnemy()
 	// Also cancels the allOutAttack if we failed.
 	if (army.size() <= 10) {
 		allOutAttack = false;
+		std::cout << "Retreat!" << std::endl;
 		return false;
 	}
 
@@ -183,9 +184,12 @@ bool CombatManager::AllOutAttackEnemy()
 			actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, target_point);
 		}
 		else {
-			if ((++numberTimesSinceNewTarget % 25) == 0) {
+			if ((++numberTimesSinceNewTarget % 50) == 0) {
 				//std::cout << "num " << numberTimesSinceNewTarget << std::endl;
 				lastAllOutPos = GetRandomNearbyPoint(lastAllOutPos, 8.0);
+			}
+			if (!observation->IsPathable(lastAllOutPos)) {
+				lastAllOutPos = sweepLocations[sweepLocationCounter - 1];
 			}
 			actions->UnitCommand(army, ABILITY_ID::ATTACK_ATTACK, lastAllOutPos);
 		}
